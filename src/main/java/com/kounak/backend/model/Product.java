@@ -1,23 +1,44 @@
 package com.kounak.backend.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
-
-import java.util.List;
 
 @Entity
-@Data
-@Table(name = "product_data")
+@Table(name = "products")
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
-    private Double price;
-    private String description;
+    private String productDetails;
+    private String measurements;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<ProductImage> images;
+    @ManyToOne
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
+
+    public Product() {}
+
+    public Product(String name, String productDetails, String measurements, Category category) {
+        this.name = name;
+        this.productDetails = productDetails;
+        this.measurements = measurements;
+        this.category = category;
+    }
+
+    // Геттеры и сеттеры
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getProductDetails() { return productDetails; }
+    public void setProductDetails(String productDetails) { this.productDetails = productDetails; }
+
+    public String getMeasurements() { return measurements; }
+    public void setMeasurements(String measurements) { this.measurements = measurements; }
+
+    public Category getCategory() { return category; }
+    public void setCategory(Category category) { this.category = category; }
 }
-
