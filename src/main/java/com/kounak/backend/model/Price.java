@@ -1,6 +1,7 @@
 package com.kounak.backend.model;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "prices")
@@ -13,15 +14,15 @@ public class Price {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    @Column(nullable = false)
-    private Double originalPrice;  // Добавляем поле
+    @Column(name = "original_price", precision = 10, scale = 2)
+    private BigDecimal originalPrice;
 
-    @Column(nullable = false)
-    private Double currentPrice;  // Добавляем поле
+    @Column(name = "currentPrice")
+    private BigDecimal currentPrice;
 
     public Price() {}
 
-    public Price(Product product, Double originalPrice, Double currentPrice) {
+    public Price(Product product, BigDecimal originalPrice, BigDecimal currentPrice) {
         this.product = product;
         this.originalPrice = originalPrice;
         this.currentPrice = currentPrice;
@@ -33,9 +34,9 @@ public class Price {
     public Product getProduct() { return product; }
     public void setProduct(Product product) { this.product = product; }
 
-    public Double getOriginalPrice() { return originalPrice; }
-    public void setOriginalPrice(Double originalPrice) { this.originalPrice = originalPrice; }
+    public BigDecimal getOriginalPrice() { return originalPrice; }
+    public void setOriginalPrice(BigDecimal originalPrice) { this.originalPrice = originalPrice; }
 
-    public Double getCurrentPrice() { return currentPrice; }
-    public void setCurrentPrice(Double currentPrice) { this.currentPrice = currentPrice; }
+    public BigDecimal getCurrentPrice() { return currentPrice; }
+    public void setCurrentPrice(BigDecimal currentPrice) { this.currentPrice = currentPrice; }
 }

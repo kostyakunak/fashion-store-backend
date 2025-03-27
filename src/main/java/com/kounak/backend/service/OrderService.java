@@ -1,10 +1,10 @@
 package com.kounak.backend.service;
 
-import com.kounak.backend.model.Order;
-import com.kounak.backend.model.OrderStatus;
-import com.kounak.backend.repository.OrderRepository;
+import com.kounak.backend.model.*;
+import com.kounak.backend.repository.*;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -12,54 +12,80 @@ import java.util.Optional;
 @Service
 public class OrderService {
 
+    private final PriceRepository priceRepository;
     private final OrderRepository orderRepository;
+    private final OrderDetailsRepository orderDetailsRepository;
+    private final UserRepository userRepository;
 
-    public OrderService(OrderRepository orderRepository) {
+    public OrderService(OrderRepository orderRepository, OrderDetailsRepository orderDetailsRepository, UserRepository userRepository, PriceRepository priceRepository) {
         this.orderRepository = orderRepository;
+        this.orderDetailsRepository = orderDetailsRepository;
+        this.userRepository = userRepository;
+        this.priceRepository = priceRepository;
     }
 
-    // Добавление нового заказа
-    public Order addOrder(Order order) {
-        order.setCreatedAt(LocalDateTime.now()); // Фиксируем время заказа
-        order.setStatus(OrderStatus.PENDING);   // По умолчанию заказ "Ожидает обработки"
-        return orderRepository.save(order);
-    }
-
-    public Order createOrder(Order order) {
-        if (order.getStatus() == null) {
-            order.setStatus(OrderStatus.AWAITING_PAYMENT); // Статус по умолчанию
+    // ✅ Создание нового заказа
+    public Order createOrder(Order order, List<OrderDetails> items) {
+        if (order.getUser() == null || order.getUser().getId() == null) {
+            throw new RuntimeException("User is required for order creation");
         }
-        return orderRepository.save(order);
+
+        User user = userRepository.findById(order.getUser().getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        order.setUser(user);
+        order.setCreatedAt(LocalDateTime.now());
+
+        if (items == null || items.isEmpty()) {
+            throw new RuntimeException("Order must contain at least one item");
+        }
+
+        Order savedOrder = orderRepository.save(order);
+        System.out.println("Order created: " + savedOrder.getId());
+
+        for (OrderDetails item : items) {
+            if (item.getProduct() == null || item.getSize() == null) {
+                throw new RuntimeException("Each order item must have a valid product and size");
+            }
+
+            // ✅ Получаем актуальную цену товара из таблицы prices
+            BigDecimal currentPrice = priceRepository.findLatestPriceByProductId(item.getProduct().getId())
+                    .orElseThrow(() -> new RuntimeException("Price not found for product ID: " + item.getProduct().getId()));
+
+            item.setOrder(savedOrder);
+            item.setPriceAtPurchase(currentPrice); // ✅ Устанавливаем цену товара на момент покупки
+            orderDetailsRepository.save(item);
+            System.out.println("Order item saved: " + item.getId() + " | Price: " + currentPrice);
+        }
+
+        return savedOrder;
     }
 
-    // Получение всех заказов
+    // ✅ Получение всех заказов
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
     }
 
-    // Обновление заказа (например, изменение статуса)
-    public Order updateOrder(Long id, Order order) {
-        Optional<Order> existingOrder = orderRepository.findById(id);
-        if (existingOrder.isPresent()) {
-            Order updatedOrder = existingOrder.get();
-            updatedOrder.setStatus(order.getStatus()); // Меняем статус (SHIPPED, DELIVERED, CANCELLED)
-            return orderRepository.save(updatedOrder);
+    // ✅ Обновление статуса заказа (конвертируем String → OrderStatus)
+    public Order updateOrder(Long id, String status) {
+        OrderStatus newStatus;
+        try {
+            newStatus = OrderStatus.valueOf(status);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid order status: " + status);
         }
-        throw new RuntimeException("Order not found");
+
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        order.setStatus(newStatus);
+        return orderRepository.save(order);
     }
 
-    // Отмена заказа (изменение статуса на CANCELLED)
     public Order cancelOrder(Long id) {
-        Optional<Order> existingOrder = orderRepository.findById(id);
-        if (existingOrder.isPresent()) {
-            Order order = existingOrder.get();
-            order.setStatus(OrderStatus.CANCELLED);
-            return orderRepository.save(order);
-        }
-        throw new RuntimeException("Order not found");
+        return updateOrder(id, "CANCELLED");
     }
 
-    // Удаление заказа
+
     public void deleteOrder(Long id) {
         orderRepository.deleteById(id);
     }

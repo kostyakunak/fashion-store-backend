@@ -2,6 +2,7 @@ package com.kounak.backend.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "orders")
@@ -15,7 +16,11 @@ public class Order {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderDetails> items; // Список товаров в заказе
 
+    public List<OrderDetails> getItems() { return items; }
+    public void setItems(List<OrderDetails> items) { this.items = items; }
 
     private LocalDateTime createdAt;
 

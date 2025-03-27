@@ -26,4 +26,10 @@ public class SizeService {
     public void deleteSize(Long id) {
         sizeRepository.deleteById(id);
     }
+
+    // ✅ Добавляем метод для получения размера по ID
+    public Size getSizeById(Long id) {
+        return sizeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Size not found"));
+    }
 }
