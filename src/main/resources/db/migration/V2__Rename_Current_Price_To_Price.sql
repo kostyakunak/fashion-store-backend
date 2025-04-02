@@ -1,0 +1,1 @@
+ALTER TABLE prices CHANGE COLUMN current_price price DECIMAL(10,2); 

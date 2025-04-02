@@ -4,12 +4,14 @@ import com.kounak.backend.model.Price;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
-import java.util.Optional;
+import java.util.List;
 
+@Repository
 public interface PriceRepository extends JpaRepository<Price, Long> {
+    @Query(value = "SELECT p.price FROM prices p WHERE p.product_id = :productId ORDER BY p.id DESC LIMIT 1", nativeQuery = true)
+    Double findLatestPriceByProductId(@Param("productId") Long productId);
 
-    @Query(value = "SELECT currentPrice FROM prices WHERE product_id = :productId ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    Optional<BigDecimal> findLatestPriceByProductId(@Param("productId") Long productId);
+    List<Price> findByProductIdOrderByCreatedAtDesc(Long productId);
 }

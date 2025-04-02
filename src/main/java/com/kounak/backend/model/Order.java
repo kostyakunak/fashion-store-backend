@@ -1,6 +1,7 @@
 package com.kounak.backend.model;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -22,10 +23,14 @@ public class Order {
     public List<OrderDetails> getItems() { return items; }
     public void setItems(List<OrderDetails> items) { this.items = items; }
 
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status = OrderStatus.AWAITING_PAYMENT; // 🛠 Добавляем статус заказа
+
+    @Column(name = "total_price", precision = 10, scale = 2)
+    private BigDecimal totalPrice;
 
     // Конструкторы
     public Order() {}
@@ -67,5 +72,13 @@ public class Order {
 
     public void setStatus(OrderStatus status) {
         this.status = status;
+    }
+
+    public BigDecimal getTotalPrice() {
+        return totalPrice;
+    }
+
+    public void setTotalPrice(BigDecimal totalPrice) {
+        this.totalPrice = totalPrice;
     }
 }

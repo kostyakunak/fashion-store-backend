@@ -47,14 +47,15 @@ public class OrderService {
                 throw new RuntimeException("Each order item must have a valid product and size");
             }
 
-            // ✅ Получаем актуальную цену товара из таблицы prices
-            BigDecimal currentPrice = priceRepository.findLatestPriceByProductId(item.getProduct().getId())
-                    .orElseThrow(() -> new RuntimeException("Price not found for product ID: " + item.getProduct().getId()));
+            Double price = priceRepository.findLatestPriceByProductId(item.getProduct().getId());
+            if (price == null) {
+                throw new RuntimeException("Price not found for product ID: " + item.getProduct().getId());
+            }
 
             item.setOrder(savedOrder);
-            item.setPriceAtPurchase(currentPrice); // ✅ Устанавливаем цену товара на момент покупки
+            item.setPriceAtPurchase(BigDecimal.valueOf(price));
             orderDetailsRepository.save(item);
-            System.out.println("Order item saved: " + item.getId() + " | Price: " + currentPrice);
+            System.out.println("Order item saved: " + item.getId() + " | Price: " + price);
         }
 
         return savedOrder;

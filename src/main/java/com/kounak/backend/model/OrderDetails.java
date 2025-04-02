@@ -30,6 +30,7 @@ public class OrderDetails {
     @Column(name = "price_at_purchase", nullable = false)
     private BigDecimal priceAtPurchase;
 
+    @Column(nullable = false)
     private int quantity;
 
     // Удаляем ненужное поле price
@@ -46,15 +47,6 @@ public class OrderDetails {
         this.priceAtPurchase = priceAtPurchase;
     }
 
-    public BigDecimal getPriceAtPurchase() {
-        return priceAtPurchase;
-    }
-
-    public void setPriceAtPurchase(BigDecimal priceAtPurchase) {
-        this.priceAtPurchase = priceAtPurchase;
-    }
-
-    // Геттеры и сеттеры
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -66,6 +58,9 @@ public class OrderDetails {
 
     public Size getSize() { return size; }
     public void setSize(Size size) { this.size = size; }
+
+    public BigDecimal getPriceAtPurchase() { return priceAtPurchase; }
+    public void setPriceAtPurchase(BigDecimal priceAtPurchase) { this.priceAtPurchase = priceAtPurchase; }
 
     public int getQuantity() { return quantity; }
     public void setQuantity(int quantity) { this.quantity = quantity; }

@@ -1,9 +1,11 @@
 package com.kounak.backend.controller;
 
 import com.kounak.backend.model.Price;
+import com.kounak.backend.model.Product;
 import com.kounak.backend.service.PriceService;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -18,16 +20,19 @@ public class PriceController {
 
     @PostMapping
     public Price addPrice(@RequestBody Price price) {
-        return priceService.addPrice(price);
+        if (price.getProduct() == null || price.getOriginalPrice() == null || price.getPrice() == null) {
+            throw new RuntimeException("Product, original price and price are required");
+        }
+        return priceService.addPrice(price.getProduct(), price.getOriginalPrice(), price.getPrice());
     }
 
-    @GetMapping
-    public List<Price> getAllPrices() {
-        return priceService.getAllPrices();
+    @GetMapping("/history/{productId}")
+    public List<Price> getPriceHistory(@PathVariable Long productId) {
+        return priceService.getPriceHistory(productId);
     }
 
-    @DeleteMapping("/{id}")
-    public void deletePrice(@PathVariable Long id) {
-        priceService.deletePrice(id);
+    @GetMapping("/latest/{productId}")
+    public BigDecimal getLatestPrice(@PathVariable Long productId) {
+        return priceService.getLatestPrice(productId);
     }
 }

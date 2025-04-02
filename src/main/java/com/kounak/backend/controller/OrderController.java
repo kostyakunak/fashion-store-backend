@@ -40,16 +40,9 @@ public class OrderController {
         User user = userService.getUserById(userId);
         System.out.println("Пользователь найден: " + user.getId());
 
-        // Проверяем, есть ли статус в запросе
-        if (!payload.containsKey("status") || payload.get("status") == null) {
-            throw new RuntimeException("Статус заказа отсутствует");
-        }
-
-        OrderStatus status = OrderStatus.valueOf(payload.get("status").toString());
-
         Order order = new Order();
         order.setUser(user);
-        order.setStatus(status);
+        order.setStatus(OrderStatus.AWAITING_PAYMENT);
 
         // Проверяем, есть ли товары в заказе
         List<Map<String, Object>> itemsList = (List<Map<String, Object>>) payload.get("items");

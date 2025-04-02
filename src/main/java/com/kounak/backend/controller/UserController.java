@@ -5,6 +5,7 @@ import com.kounak.backend.service.UserService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
 @RestController
 @RequestMapping("/api/admin/users")
 @CrossOrigin(origins = "*")
@@ -21,5 +22,20 @@ public class UserController {
         List<User> users = userService.getAllUsers();
         System.out.println("Users from DB: " + users); // ЛОГ ДЛЯ ПРОВЕРКИ
         return users;
+    }
+
+    @PostMapping
+    public User createUser(@RequestBody User user) {
+        return userService.createUser(user);
+    }
+
+    @PutMapping("/{id}")
+    public User updateUser(@PathVariable Long id, @RequestBody User user) {
+        return userService.updateUser(id, user);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
     }
 }
