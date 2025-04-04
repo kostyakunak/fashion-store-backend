@@ -13,11 +13,11 @@ import java.util.Optional;
 public class ProductService {
 
     private final ProductRepository productRepository;
-    private final CategoryRepository categoryRepository; // Добавляем репозиторий категорий
+    private final CategoryRepository categoryRepository;
 
     public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository) {
         this.productRepository = productRepository;
-        this.categoryRepository = categoryRepository; // Инициализируем
+        this.categoryRepository = categoryRepository;
     }
 
     public List<Product> getAllProducts() {
@@ -30,6 +30,9 @@ public class ProductService {
     }
 
     public Product addProduct(Product product) {
+        if (product.getName() == null || product.getName().trim().isEmpty()) {
+            throw new RuntimeException("Product name is required");
+        }
         if (product.getCategory() == null || product.getCategory().getId() == null) {
             throw new RuntimeException("Category is required");
         }
@@ -42,12 +45,25 @@ public class ProductService {
     }
 
     public Product updateProduct(Long id, Product product) {
-        Optional<Product> existingProduct = productRepository.findById(id);
-        if (existingProduct.isPresent()) {
-            product.setId(id);
-            return productRepository.save(product);
+        Product existingProduct = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        if (product.getName() != null && !product.getName().trim().isEmpty()) {
+            existingProduct.setName(product.getName());
         }
-        throw new RuntimeException("Product not found");
+        if (product.getProductDetails() != null) {
+            existingProduct.setProductDetails(product.getProductDetails());
+        }
+        if (product.getMeasurements() != null) {
+            existingProduct.setMeasurements(product.getMeasurements());
+        }
+        if (product.getCategory() != null && product.getCategory().getId() != null) {
+            Category category = categoryRepository.findById(product.getCategory().getId())
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+            existingProduct.setCategory(category);
+        }
+
+        return productRepository.save(existingProduct);
     }
 
     public void deleteProduct(Long id) {

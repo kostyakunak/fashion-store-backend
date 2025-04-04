@@ -18,6 +18,10 @@ public class PriceService {
         this.priceRepository = priceRepository;
     }
 
+    public List<Price> getAllPrices() {
+        return priceRepository.findAll();
+    }
+
     public Price addPrice(Product product, BigDecimal originalPrice, BigDecimal price) {
         if (originalPrice == null || price == null) {
             throw new IllegalArgumentException("Original price and price cannot be null");
@@ -25,6 +29,20 @@ public class PriceService {
 
         Price newPrice = new Price(product, originalPrice, price);
         return priceRepository.save(newPrice);
+    }
+
+    public Price updatePrice(Long id, Price price) {
+        Price existingPrice = priceRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Price not found with id: " + id));
+        
+        existingPrice.setOriginalPrice(price.getOriginalPrice());
+        existingPrice.setPrice(price.getPrice());
+        
+        return priceRepository.save(existingPrice);
+    }
+
+    public void deletePrice(Long id) {
+        priceRepository.deleteById(id);
     }
 
     public BigDecimal getLatestPrice(Long productId) {

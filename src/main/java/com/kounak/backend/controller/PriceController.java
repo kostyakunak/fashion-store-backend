@@ -18,12 +18,27 @@ public class PriceController {
         this.priceService = priceService;
     }
 
+    @GetMapping
+    public List<Price> getAllPrices() {
+        return priceService.getAllPrices();
+    }
+
     @PostMapping
     public Price addPrice(@RequestBody Price price) {
         if (price.getProduct() == null || price.getOriginalPrice() == null || price.getPrice() == null) {
             throw new RuntimeException("Product, original price and price are required");
         }
         return priceService.addPrice(price.getProduct(), price.getOriginalPrice(), price.getPrice());
+    }
+
+    @PutMapping("/{id}")
+    public Price updatePrice(@PathVariable Long id, @RequestBody Price price) {
+        return priceService.updatePrice(id, price);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deletePrice(@PathVariable Long id) {
+        priceService.deletePrice(id);
     }
 
     @GetMapping("/history/{productId}")
