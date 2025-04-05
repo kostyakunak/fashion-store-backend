@@ -19,16 +19,16 @@ public class PriceService {
     }
 
     public List<Price> getAllPrices() {
-        return priceRepository.findAll();
+        return priceRepository.findAll().stream()
+                .sorted((p1, p2) -> p1.getId().compareTo(p2.getId()))
+                .toList();
     }
 
-    public Price addPrice(Product product, BigDecimal originalPrice, BigDecimal price) {
-        if (originalPrice == null || price == null) {
+    public Price addPrice(Price price) {
+        if (price.getOriginalPrice() == null || price.getPrice() == null) {
             throw new IllegalArgumentException("Original price and price cannot be null");
         }
-
-        Price newPrice = new Price(product, originalPrice, price);
-        return priceRepository.save(newPrice);
+        return priceRepository.save(price);
     }
 
     public Price updatePrice(Long id, Price price) {
@@ -37,6 +37,7 @@ public class PriceService {
         
         existingPrice.setOriginalPrice(price.getOriginalPrice());
         existingPrice.setPrice(price.getPrice());
+        existingPrice.setProduct(price.getProduct());
         
         return priceRepository.save(existingPrice);
     }

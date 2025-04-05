@@ -3,6 +3,7 @@ package com.kounak.backend.controller;
 import com.kounak.backend.model.Price;
 import com.kounak.backend.model.Product;
 import com.kounak.backend.service.PriceService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -24,15 +25,21 @@ public class PriceController {
     }
 
     @PostMapping
-    public Price addPrice(@RequestBody Price price) {
+    public ResponseEntity<Price> addPrice(@RequestBody Price price) {
         if (price.getProduct() == null || price.getOriginalPrice() == null || price.getPrice() == null) {
             throw new RuntimeException("Product, original price and price are required");
         }
-        return priceService.addPrice(price.getProduct(), price.getOriginalPrice(), price.getPrice());
+        if (price.getId() == null) {
+            throw new RuntimeException("ID is required");
+        }
+        return ResponseEntity.ok(priceService.addPrice(price));
     }
 
     @PutMapping("/{id}")
     public Price updatePrice(@PathVariable Long id, @RequestBody Price price) {
+        if (price.getProduct() == null) {
+            throw new RuntimeException("Product is required");
+        }
         return priceService.updatePrice(id, price);
     }
 

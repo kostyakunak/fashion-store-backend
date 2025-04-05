@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 @Table(name = "prices")
 public class Price {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
