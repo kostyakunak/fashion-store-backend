@@ -125,7 +125,22 @@ public class OrderService {
     }
 
     public Order updateOrder(Order order) {
-        // Сохраняем заказ
-        return orderRepository.save(order);
+        // Получаем существующий заказ
+        Order existingOrder = orderRepository.findById(order.getId())
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+        
+        // Обновляем только измененные поля
+        if (order.getStatus() != null) {
+            existingOrder.setStatus(order.getStatus());
+        }
+        if (order.getUser() != null) {
+            existingOrder.setUser(order.getUser());
+        }
+        if (order.getTotalPrice() != null) {
+            existingOrder.setTotalPrice(order.getTotalPrice());
+        }
+        
+        // Сохраняем только обновленные поля
+        return orderRepository.save(existingOrder);
     }
 }

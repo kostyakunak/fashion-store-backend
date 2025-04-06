@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -98,16 +99,35 @@ public class OrderController {
             // Получаем существующий заказ
             Order order = orderService.getOrderById(id);
             
-            // Меняем ID
-            if (payload.containsKey("id")) {
-                Long newId = Long.valueOf(payload.get("id").toString());
-                order.setId(newId);
-                orderService.updateOrder(order);
+            // Обновляем статус, если он указан
+            if (payload.containsKey("status")) {
+                try {
+                    String status = (String) payload.get("status");
+                    order.setStatus(OrderStatus.valueOf(status));
+                } catch (IllegalArgumentException e) {
+                    return ResponseEntity.badRequest().body("Invalid order status: " + payload.get("status"));
+                }
             }
             
-            return ResponseEntity.ok(order);
+            // Обновляем пользователя, если он указан
+            if (payload.containsKey("userId")) {
+                Long userId = Long.valueOf(payload.get("userId").toString());
+                User user = userService.getUserById(userId);
+                order.setUser(user);
+            }
+            
+            // Обновляем общую стоимость, если она указана
+            if (payload.containsKey("totalPrice")) {
+                Double totalPrice = Double.valueOf(payload.get("totalPrice").toString());
+                order.setTotalPrice(BigDecimal.valueOf(totalPrice));
+            }
+            
+            // Сохраняем изменения
+            Order updatedOrder = orderService.updateOrder(order);
+            return ResponseEntity.ok(updatedOrder);
             
         } catch (Exception e) {
+            logger.error("Error updating order: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("Error updating order: " + e.getMessage());
         }
