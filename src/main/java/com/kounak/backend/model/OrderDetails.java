@@ -1,6 +1,6 @@
 package com.kounak.backend.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -15,7 +15,7 @@ public class OrderDetails {
 
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)
-    @JsonIgnore  // 🔥 Отключает бесконечную вложенность
+    @JsonBackReference
     private Order order;
 
     @ManyToOne

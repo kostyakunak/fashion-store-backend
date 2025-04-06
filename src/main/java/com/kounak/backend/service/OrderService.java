@@ -2,10 +2,13 @@ package com.kounak.backend.service;
 
 import com.kounak.backend.model.*;
 import com.kounak.backend.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,6 +19,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderDetailsRepository orderDetailsRepository;
     private final UserRepository userRepository;
+    private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
 
     public OrderService(OrderRepository orderRepository, OrderDetailsRepository orderDetailsRepository, UserRepository userRepository, PriceRepository priceRepository) {
         this.orderRepository = orderRepository;
@@ -34,28 +38,22 @@ public class OrderService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         order.setUser(user);
         order.setCreatedAt(LocalDateTime.now());
+        order.setTotalPrice(BigDecimal.ZERO);
 
-        if (items == null || items.isEmpty()) {
-            throw new RuntimeException("Order must contain at least one item");
+        // Проверяем существование ID
+        if (order.getId() != null && orderRepository.existsById(order.getId())) {
+            throw new RuntimeException("Order with ID " + order.getId() + " already exists");
         }
 
+        // Сохраняем заказ
         Order savedOrder = orderRepository.save(order);
-        System.out.println("Order created: " + savedOrder.getId());
 
-        for (OrderDetails item : items) {
-            if (item.getProduct() == null || item.getSize() == null) {
-                throw new RuntimeException("Each order item must have a valid product and size");
+        // Сохраняем детали заказа
+        if (items != null && !items.isEmpty()) {
+            for (OrderDetails item : items) {
+                item.setOrder(savedOrder);
+                orderDetailsRepository.save(item);
             }
-
-            Double price = priceRepository.findLatestPriceByProductId(item.getProduct().getId());
-            if (price == null) {
-                throw new RuntimeException("Price not found for product ID: " + item.getProduct().getId());
-            }
-
-            item.setOrder(savedOrder);
-            item.setPriceAtPurchase(BigDecimal.valueOf(price));
-            orderDetailsRepository.save(item);
-            System.out.println("Order item saved: " + item.getId() + " | Price: " + price);
         }
 
         return savedOrder;
@@ -63,7 +61,34 @@ public class OrderService {
 
     // ✅ Получение всех заказов
     public List<Order> getAllOrders() {
-        return orderRepository.findAll();
+        try {
+            List<Order> orders = orderRepository.findAllWithDetails();
+            if (orders == null) {
+                logger.warn("Order repository returned null");
+                return new ArrayList<>();
+            }
+            
+            for (Order order : orders) {
+                try {
+                    if (order.getItems() != null) {
+                        BigDecimal totalPrice = BigDecimal.ZERO;
+                        for (OrderDetails item : order.getItems()) {
+                            if (item != null && item.getPriceAtPurchase() != null) {
+                                totalPrice = totalPrice.add(item.getPriceAtPurchase().multiply(BigDecimal.valueOf(item.getQuantity())));
+                            }
+                        }
+                        order.setTotalPrice(totalPrice);
+                    }
+                } catch (Exception e) {
+                    logger.error("Error calculating total price for order {}: {}", order.getId(), e.getMessage());
+                    order.setTotalPrice(BigDecimal.ZERO);
+                }
+            }
+            return orders;
+        } catch (Exception e) {
+            logger.error("Error fetching orders: {}", e.getMessage(), e);
+            return new ArrayList<>();
+        }
     }
 
     // ✅ Обновление статуса заказа (конвертируем String → OrderStatus)
@@ -86,8 +111,21 @@ public class OrderService {
         return updateOrder(id, "CANCELLED");
     }
 
-
     public void deleteOrder(Long id) {
         orderRepository.deleteById(id);
+    }
+
+    public Order getOrderById(Long id) {
+        return orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+    }
+
+    public boolean existsById(Long id) {
+        return orderRepository.existsById(id);
+    }
+
+    public Order updateOrder(Order order) {
+        // Сохраняем заказ
+        return orderRepository.save(order);
     }
 }

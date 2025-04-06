@@ -2,6 +2,8 @@ package com.kounak.backend.service;
 
 import com.kounak.backend.model.User;
 import com.kounak.backend.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -9,6 +11,7 @@ import java.util.List;
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -16,7 +19,15 @@ public class UserService {
 
     // ✅ Получить список всех пользователей
     public List<User> getAllUsers() {
-        return userRepository.findAll();
+        try {
+            logger.info("Attempting to fetch all users from repository");
+            List<User> users = userRepository.findAll();
+            logger.info("Successfully fetched {} users", users.size());
+            return users;
+        } catch (Exception e) {
+            logger.error("Error fetching users: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
     // ✅ Получить пользователя по ID
