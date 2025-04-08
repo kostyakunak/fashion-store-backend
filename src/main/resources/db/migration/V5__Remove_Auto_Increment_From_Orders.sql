@@ -1,0 +1,2 @@
+ALTER TABLE `orders` MODIFY COLUMN `id` bigint NOT NULL;
+ALTER TABLE `orders` AUTO_INCREMENT = 1; 

@@ -1,6 +1,7 @@
 package com.kounak.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -10,12 +11,11 @@ import java.math.BigDecimal;
 public class OrderDetails {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)
-    @JsonBackReference
+    @JsonIgnoreProperties({"items"})
     private Order order;
 
     @ManyToOne

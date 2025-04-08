@@ -39,6 +39,12 @@ public class OrderController {
     @PostMapping
     public ResponseEntity<?> createOrder(@RequestBody Map<String, Object> payload) {
         try {
+            // Проверяем наличие ID
+            if (!payload.containsKey("id")) {
+                return ResponseEntity.badRequest().body("id is required");
+            }
+            Long id = Long.valueOf(payload.get("id").toString());
+
             // Проверяем наличие userId
             Object userIdObj = payload.get("userId");
             if (userIdObj == null) {
@@ -51,13 +57,8 @@ public class OrderController {
 
             // Создаем заказ
             Order order = new Order();
+            order.setId(id);
             order.setUser(user);
-            
-            // Устанавливаем ID из запроса
-            if (payload.containsKey("id")) {
-                Long id = Long.valueOf(payload.get("id").toString());
-                order.setId(id);
-            }
             
             // Устанавливаем статус
             String status = (String) payload.get("status");

@@ -41,7 +41,7 @@ public class OrderService {
         order.setTotalPrice(BigDecimal.ZERO);
 
         // Проверяем существование ID
-        if (order.getId() != null && orderRepository.existsById(order.getId())) {
+        if (orderRepository.existsById(order.getId())) {
             throw new RuntimeException("Order with ID " + order.getId() + " already exists");
         }
 

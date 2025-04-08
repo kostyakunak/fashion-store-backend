@@ -1,0 +1,3 @@
+ALTER TABLE order_details MODIFY COLUMN id BIGINT NOT NULL;
+ALTER TABLE order_details DROP PRIMARY KEY;
+ALTER TABLE order_details ADD PRIMARY KEY (id); 
