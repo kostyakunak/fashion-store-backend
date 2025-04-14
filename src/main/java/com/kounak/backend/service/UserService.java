@@ -36,6 +36,17 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
+    // ✅ Проверить существование пользователя
+    public boolean userExists(Long id) {
+        return userRepository.existsById(id);
+    }
+
+    // ✅ Проверить, занят ли email
+    public boolean isEmailTaken(String email) {
+        return userRepository.findAll().stream()
+                .anyMatch(user -> user.getEmail().equalsIgnoreCase(email));
+    }
+
     public User createUser(User user) {
         return userRepository.save(user);
     }
@@ -47,6 +58,12 @@ public class UserService {
         existingUser.setPhone(user.getPhone());
         existingUser.setEmail(user.getEmail());
         existingUser.setRole(user.getRole());
+        
+        // Обновляем пароль только если он был передан
+        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+            existingUser.setPassword(user.getPassword());
+        }
+        
         return userRepository.save(existingUser);
     }
 
