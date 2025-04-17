@@ -29,9 +29,12 @@ public class PriceController {
         if (price.getProduct() == null || price.getOriginalPrice() == null || price.getPrice() == null) {
             throw new RuntimeException("Product, original price and price are required");
         }
+        
+        // Генерируем ID автоматически, если он не указан
         if (price.getId() == null) {
-            throw new RuntimeException("ID is required");
+            price.setId(System.currentTimeMillis()); // Простой способ генерации уникального ID
         }
+        
         return ResponseEntity.ok(priceService.addPrice(price));
     }
 

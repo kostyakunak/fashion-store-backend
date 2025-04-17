@@ -26,6 +26,11 @@ public class SizeController {
         return sizeService.getAllSizes();
     }
 
+    @PutMapping("/{id}")
+    public Size updateSize(@PathVariable Long id, @RequestBody Size size) {
+        return sizeService.updateSize(id, size);
+    }
+
     @DeleteMapping("/{id}")
     public void deleteSize(@PathVariable Long id) {
         sizeService.deleteSize(id);

@@ -16,9 +16,19 @@ public class ImageController {
         this.imageService = imageService;
     }
 
+    @GetMapping
+    public List<Image> getAllImages() {
+        return imageService.getAllImages();
+    }
+
     @PostMapping
     public Image addImage(@RequestBody Image image) {
         return imageService.addImage(image);
+    }
+
+    @PutMapping("/{id}")
+    public Image updateImage(@PathVariable Long id, @RequestBody Image image) {
+        return imageService.updateImage(id, image);
     }
 
     @GetMapping("/{productId}")

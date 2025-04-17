@@ -5,6 +5,7 @@ import com.kounak.backend.repository.SizeRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class SizeService {
@@ -31,5 +32,15 @@ public class SizeService {
     public Size getSizeById(Long id) {
         return sizeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Size not found"));
+    }
+    
+    // ✅ Добавляем метод для обновления размера
+    public Size updateSize(Long id, Size size) {
+        Optional<Size> existingSize = sizeRepository.findById(id);
+        if (existingSize.isPresent()) {
+            size.setId(id);
+            return sizeRepository.save(size);
+        }
+        throw new RuntimeException("Size not found");
     }
 }
