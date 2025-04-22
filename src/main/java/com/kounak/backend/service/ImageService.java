@@ -41,7 +41,11 @@ public class ImageService {
     }
 
     public List<Image> getImagesByProduct(Long productId) {
-        return imageRepository.findByProductId(productId); // Запрос теперь использует productId
+        return imageRepository.findByProductId(productId);
+    }
+
+    public List<Image> getImagesByProductId(Long productId) {
+        return imageRepository.findByProductId(productId);
     }
 
     public void deleteImage(Long id) {

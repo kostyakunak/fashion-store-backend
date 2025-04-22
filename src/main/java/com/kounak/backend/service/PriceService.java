@@ -54,6 +54,14 @@ public class PriceService {
         return BigDecimal.valueOf(price);
     }
 
+    public Price getLatestPriceByProductId(Long productId) {
+        List<Price> prices = priceRepository.findByProductIdOrderByCreatedAtDesc(productId);
+        if (prices == null || prices.isEmpty()) {
+            return null;
+        }
+        return prices.get(0);
+    }
+
     public List<Price> getPriceHistory(Long productId) {
         return priceRepository.findByProductIdOrderByCreatedAtDesc(productId);
     }

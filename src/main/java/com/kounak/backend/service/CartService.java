@@ -24,7 +24,29 @@ public class CartService {
         return cartRepository.findByUserId(userId);
     }
 
+    public List<Cart> getCartByUserId(Long userId) {
+        return cartRepository.findByUserId(userId);
+    }
+
+    public List<Cart> getCartByUserIdAndProductIdAndSizeId(Long userId, Long productId, Long sizeId) {
+        return cartRepository.findByUserIdAndProductIdAndSizeId(userId, productId, sizeId);
+    }
+
+    public Cart getCartItemById(Long id) {
+        return cartRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Элемент корзины не найден с ID: " + id));
+    }
+
     public Cart updateCart(Long id, Cart cart) {
+        Optional<Cart> existingCart = cartRepository.findById(id);
+        if (existingCart.isPresent()) {
+            cart.setId(id);
+            return cartRepository.save(cart);
+        }
+        throw new RuntimeException("Cart item not found");
+    }
+
+    public Cart updateCartItem(Long id, Cart cart) {
         Optional<Cart> existingCart = cartRepository.findById(id);
         if (existingCart.isPresent()) {
             cart.setId(id);

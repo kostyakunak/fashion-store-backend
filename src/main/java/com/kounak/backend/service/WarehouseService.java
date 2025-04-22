@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class WarehouseService {
@@ -52,6 +53,27 @@ public class WarehouseService {
 
     public List<Warehouse> getAllWarehouseEntries() {
         return warehouseRepository.findAll();
+    }
+    
+    // Метод для получения доступных размеров товара
+    public List<Warehouse> getAvailableWarehouseItemsByProductId(Long productId) {
+        // Получаем все записи со склада для данного товара
+        Product product = productRepository.findById(productId)
+            .orElseThrow(() -> new RuntimeException("Товар не найден с ID: " + productId));
+            
+        // Возвращаем только те записи, где количество товара > 0
+        return warehouseRepository.findByProduct(product).stream()
+            .filter(item -> item.getQuantity() > 0)
+            .collect(Collectors.toList());
+    }
+    
+    // Метод для получения количества товара определенного размера на складе
+    public int getProductQuantityBySize(Long productId, Long sizeId) {
+        List<Warehouse> items = warehouseRepository.findByProductIdAndSizeId(productId, sizeId);
+        if (items.isEmpty()) {
+            return 0;
+        }
+        return items.get(0).getQuantity();
     }
 
     public void deleteWarehouseEntry(Long id) {

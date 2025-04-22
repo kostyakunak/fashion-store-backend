@@ -8,7 +8,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/users")
@@ -78,7 +80,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user) {
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User user) {
         try {
             // Проверяем, что пользователь существует
             if (!userService.userExists(id)) {
@@ -86,15 +88,44 @@ public class UserController {
                 return ResponseEntity.notFound().build();
             }
             
-            // Проверяем, что email уникален (если он изменился)
+            // Получаем существующего пользователя
             User existingUser = userService.getUserById(id);
-            if (!existingUser.getEmail().equals(user.getEmail()) && 
+            
+            // Проверяем, что email уникален (если он изменился)
+            if (user.getEmail() != null && !existingUser.getEmail().equals(user.getEmail()) && 
                 userService.isEmailTaken(user.getEmail())) {
                 logger.error("Email {} уже используется другим пользователем", user.getEmail());
-                return ResponseEntity.status(HttpStatus.CONFLICT).build();
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "success", false,
+                    "message", "Email уже используется другим пользователем"
+                ));
             }
             
-            User updatedUser = userService.updateUser(id, user);
+            // Валидация данных перед обновлением
+            Map<String, String> validationErrors = validateUserData(user);
+            if (!validationErrors.isEmpty()) {
+                logger.error("Ошибка валидации данных пользователя: {}", validationErrors);
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Ошибка валидации данных",
+                    "errors", validationErrors
+                ));
+            }
+            
+            // Обновляем только переданные поля, оставляем существующие значения, если поле не передано
+            if (user.getFirstName() != null) existingUser.setFirstName(user.getFirstName());
+            if (user.getLastName() != null) existingUser.setLastName(user.getLastName());
+            if (user.getEmail() != null) existingUser.setEmail(user.getEmail());
+            if (user.getPhone() != null) existingUser.setPhone(user.getPhone());
+            if (user.getPassword() != null && !user.getPassword().isEmpty()) existingUser.setPassword(user.getPassword());
+            if (user.getRole() != null) existingUser.setRole(user.getRole());
+            
+            // Обновляем адрес, если он передан
+            if (user.getAddress() != null) {
+                existingUser.setAddress(user.getAddress());
+            }
+            
+            User updatedUser = userService.updateUser(id, existingUser);
             logger.info("Обновлен пользователь с ID {}", id);
             return ResponseEntity.ok(updatedUser);
         } catch (RuntimeException e) {
@@ -102,8 +133,41 @@ public class UserController {
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
             logger.error("Ошибка при обновлении пользователя {}: {}", id, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                "success", false,
+                "message", "Ошибка сервера при обновлении пользователя: " + e.getMessage()
+            ));
         }
+    }
+    
+    /**
+     * Валидация данных пользователя
+     */
+    private Map<String, String> validateUserData(User user) {
+        Map<String, String> errors = new HashMap<>();
+        
+        // Валидация телефона
+        if (user.getPhone() != null && !user.getPhone().isEmpty()) {
+            if (!user.getPhone().matches("^\\+7\\d{10}$") && !user.getPhone().matches("^\\d{10,11}$")) {
+                errors.put("phone", "Неверный формат телефона. Используйте формат +7XXXXXXXXXX или 10-11 цифр");
+            }
+        }
+        
+        // Валидация email
+        if (user.getEmail() != null && !user.getEmail().isEmpty()) {
+            if (!user.getEmail().matches("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
+                errors.put("email", "Неверный формат email");
+            }
+        }
+        
+        // Валидация адреса
+        if (user.getAddress() != null) {
+            if (user.getAddress().length() > 255) {
+                errors.put("address", "Адрес слишком длинный (максимум 255 символов)");
+            }
+        }
+        
+        return errors;
     }
 
     @DeleteMapping("/{id}")

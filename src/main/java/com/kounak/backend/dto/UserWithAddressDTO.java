@@ -1,12 +1,12 @@
 package com.kounak.backend.dto;
 
 public class UserWithAddressDTO {
-    private UserRequestDTO user;
-    private AddressRequestDTO address;
+    private RegisterRequest user;
+    private String address;
 
-    public UserRequestDTO getUser() { return user; }
-    public void setUser(UserRequestDTO user) { this.user = user; }
+    public RegisterRequest getUser() { return user; }
+    public void setUser(RegisterRequest user) { this.user = user; }
 
-    public AddressRequestDTO getAddress() { return address; }
-    public void setAddress(AddressRequestDTO address) { this.address = address; }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
 } 

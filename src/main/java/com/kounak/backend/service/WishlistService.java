@@ -5,6 +5,7 @@ import com.kounak.backend.repository.WishlistRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class WishlistService {
@@ -21,6 +22,10 @@ public class WishlistService {
 
     public List<Wishlist> getUserWishlist(Long userId) {
         return wishlistRepository.findByUserId(userId);
+    }
+
+    public List<Wishlist> getUserWishlistByProductId(Long userId, Long productId) {
+        return wishlistRepository.findByUserIdAndProductId(userId, productId);
     }
 
     public void removeFromWishlist(Long id) {

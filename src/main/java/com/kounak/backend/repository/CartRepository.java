@@ -12,6 +12,14 @@ import java.util.List;
 public interface CartRepository extends JpaRepository<Cart, Long> {
     List<Cart> findByUserId(Long userId);
     
+    // Поиск по нескольким параметрам с использованием JPQL
+    @Query("SELECT c FROM Cart c WHERE c.user.id = :userId AND c.product.id = :productId AND c.sizeId = :sizeId")
+    List<Cart> findByUserIdAndProductIdAndSizeId(
+        @Param("userId") Long userId, 
+        @Param("productId") Long productId, 
+        @Param("sizeId") Long sizeId
+    );
+    
     @Modifying
     @Transactional
     @Query("DELETE FROM Cart c WHERE c.product.id = :productId")
