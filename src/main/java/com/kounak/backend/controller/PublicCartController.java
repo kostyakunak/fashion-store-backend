@@ -8,15 +8,23 @@ import com.kounak.backend.service.ProductService;
 import com.kounak.backend.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.logging.Logger;
+import org.springframework.http.HttpStatus;
+import com.kounak.backend.exception.ResourceNotFoundException;
+import com.kounak.backend.exception.CartOperationException;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/cart")
 public class PublicCartController {
 
+    private static final Logger logger = Logger.getLogger(PublicCartController.class.getName());
+    
     private final CartService cartService;
     private final UserService userService;
     private final ProductService productService;
@@ -29,57 +37,248 @@ public class PublicCartController {
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<Cart>> getUserCart(@PathVariable Long userId) {
-        List<Cart> cartItems = cartService.getCartByUserId(userId);
-        return ResponseEntity.ok(cartItems);
+        logger.info("=== НАЧАЛО getUserCart для userId=" + userId + " ===");
+        try {
+            logger.info("Поиск пользователя по ID: " + userId);
+            User user = userService.getUserById(userId);
+            
+            if (user == null) {
+                logger.warning("Пользователь с ID " + userId + " не найден");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(List.of());
+            }
+            
+            logger.info("Пользователь найден: ID=" + user.getId() +
+                       ", email=" + user.getEmail() +
+                       ", имя=" + user.getFirstName() +
+                       ", фамилия=" + user.getLastName());
+            
+            logger.info("Запрос корзины для email=" + user.getEmail());
+            List<Cart> cartItems = cartService.getCartByUserId(user.getEmail());
+            logger.info("Получено элементов корзины: " + cartItems.size());
+            
+            return ResponseEntity.ok(cartItems);
+        } catch (Exception e) {
+            logger.severe("Ошибка при получении корзины пользователя: " + e.getMessage());
+            logger.severe("Тип исключения: " + e.getClass().getName());
+            logger.severe("Стек вызовов:");
+            for (StackTraceElement element : e.getStackTrace()) {
+                logger.severe("\t" + element.toString());
+            }
+            throw e;
+        } finally {
+            logger.info("=== ЗАВЕРШЕНИЕ getUserCart для userId=" + userId + " ===");
+        }
     }
 
+    /**
+     * Добавляет товар в корзину или увеличивает его количество, если он уже в корзине
+     */
     @PostMapping
     public ResponseEntity<?> addToCart(@RequestBody Map<String, Object> request) {
+        logger.info("=== НАЧАЛО ОБРАБОТКИ ЗАПРОСА НА ДОБАВЛЕНИЕ В КОРЗИНУ ===");
+        logger.info("Полученные данные: " + request);
+        
         try {
-            Long userId = Long.parseLong(request.get("userId").toString());
+            // Получаем email пользователя из контекста аутентификации
+            String email = SecurityContextHolder.getContext().getAuthentication().getName();
+            User user = userService.getUserByEmail(email);
+            
+            if (user == null) {
+                logger.warning("Пользователь с email " + email + " не найден");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Пользователь не найден"));
+            }
+            
+            // Извлекаем и парсим параметры
             Long productId = Long.parseLong(request.get("productId").toString());
             Long sizeId = Long.parseLong(request.get("sizeId").toString());
             int quantity = Integer.parseInt(request.get("quantity").toString());
             
+            logger.info(String.format("Параметры: userId=%d, productId=%d, sizeId=%d, quantity=%d",
+                    user.getId(), productId, sizeId, quantity));
+            
+            // Проверяем существование товара
+            logger.info("Проверка существования товара с ID: " + productId);
+            Product product = productService.getProductById(productId);
+            if (product == null) {
+                logger.warning("Товар с ID " + productId + " не найден");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Товар с ID " + productId + " не найден"));
+            }
+            logger.info("Товар найден: " + product.getName());
+            
+            // Используем новый метод с проверками и валидацией
+            logger.info("Добавление товара в корзину...");
+            Cart savedItem = cartService.addItemToCart(user.getId(), productId, sizeId, quantity);
+            logger.info("Товар успешно добавлен в корзину: " + savedItem.getId());
+            
+            // Возвращаем сохраненный элемент
+            logger.info("=== ЗАВЕРШЕНИЕ ОБРАБОТКИ ЗАПРОСА НА ДОБАВЛЕНИЕ В КОРЗИНУ (УСПЕХ) ===");
+            return ResponseEntity.ok(savedItem);
+            
+        } catch (IllegalArgumentException e) {
+            logger.severe("Ошибка валидации параметров: " + e.getMessage());
+            logger.info("=== ЗАВЕРШЕНИЕ ОБРАБОТКИ ЗАПРОСА НА ДОБАВЛЕНИЕ В КОРЗИНУ (ОШИБКА) ===");
+            return ResponseEntity.badRequest().body(Map.of("error", "Неверные параметры: " + e.getMessage()));
+        } catch (ResourceNotFoundException e) {
+            logger.severe("Ресурс не найден: " + e.getMessage());
+            logger.info("=== ЗАВЕРШЕНИЕ ОБРАБОТКИ ЗАПРОСА НА ДОБАВЛЕНИЕ В КОРЗИНУ (ОШИБКА) ===");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (CartOperationException e) {
+            logger.severe("Ошибка операции с корзиной: " + e.getMessage());
+            logger.info("=== ЗАВЕРШЕНИЕ ОБРАБОТКИ ЗАПРОСА НА ДОБАВЛЕНИЕ В КОРЗИНУ (ОШИБКА) ===");
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            logger.severe("Неожиданная ошибка: " + e.getMessage());
+            e.printStackTrace();
+            logger.info("=== ЗАВЕРШЕНИЕ ОБРАБОТКИ ЗАПРОСА НА ДОБАВЛЕНИЕ В КОРЗИНУ (ОШИБКА) ===");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Произошла ошибка: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Миграция корзины из локального хранилища в БД после авторизации пользователя
+     * Принимает массив товаров из localStorage и добавляет их в корзину пользователя
+     */
+    @PostMapping("/migrate")
+    public ResponseEntity<?> migrateCart(@RequestBody Map<String, Object> request) {
+        try {
+            Long userId = Long.parseLong(request.get("userId").toString());
+            List<Map<String, Object>> items = (List<Map<String, Object>>) request.get("items");
+            
             // Проверяем существование пользователя
             User user = userService.getUserById(userId);
-            
-            // Получаем объект продукта
-            Product product = productService.getProductById(productId);
-            
-            // Проверяем, есть ли уже такой товар в корзине
-            List<Cart> existingItems = cartService.getCartByUserIdAndProductIdAndSizeId(
-                userId, productId, sizeId);
-            
-            if (!existingItems.isEmpty()) {
-                // Если товар уже есть, обновляем количество
-                Cart existingItem = existingItems.get(0);
-                existingItem.setQuantity(existingItem.getQuantity() + quantity);
-                cartService.updateCartItem(existingItem.getId(), existingItem);
-                return ResponseEntity.ok(existingItem);
-            } else {
-                // Если товара нет, создаем новый элемент корзины
-                Cart cartItem = new Cart();
-                cartItem.setUser(user);
-                cartItem.setProduct(product);
-                cartItem.setSizeId(sizeId);
-                cartItem.setQuantity(quantity);
-                
-                Cart savedItem = cartService.addToCart(cartItem);
-                return ResponseEntity.ok(savedItem);
+            if (user == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Пользователь не найден"));
             }
+            
+            List<Cart> migratedItems = new ArrayList<>();
+            
+            // Обрабатываем каждый товар
+            for (Map<String, Object> item : items) {
+                Long productId = Long.parseLong(item.get("productId").toString());
+                Long sizeId = Long.parseLong(item.get("sizeId").toString());
+                int quantity = Integer.parseInt(item.get("quantity").toString());
+                
+                // Получаем объект продукта
+                Product product;
+                try {
+                    product = productService.getProductById(productId);
+                    if (product == null) {
+                        continue; // Пропускаем товары, которых нет в базе
+                    }
+                } catch (Exception e) {
+                    continue; // Пропускаем товары, с которыми возникли ошибки
+                }
+                
+                // Проверяем, есть ли уже такой товар в корзине
+                List<Cart> existingItems = cartService.getCartByUserIdAndProductIdAndSizeId(
+                    userId, productId, sizeId);
+                
+                if (!existingItems.isEmpty()) {
+                    // Если товар уже есть, обновляем количество
+                    Cart existingItem = existingItems.get(0);
+                    existingItem.setQuantity(existingItem.getQuantity() + quantity);
+                    Cart updatedItem = cartService.updateCartItem(existingItem.getId(), existingItem);
+                    migratedItems.add(updatedItem);
+                } else {
+                    // Если товара нет, создаем новый элемент корзины
+                    Cart cartItem = new Cart();
+                    cartItem.setUser(user);
+                    cartItem.setProduct(product);
+                    cartItem.setSizeId(sizeId);
+                    cartItem.setQuantity(quantity);
+                    
+                    Cart savedItem = cartService.addToCart(cartItem);
+                    migratedItems.add(savedItem);
+                }
+            }
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "migratedItems", migratedItems.size()
+            ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
+    /**
+     * Удаляет товар из корзины по ID элемента корзины
+     */
     @DeleteMapping("/{cartItemId}")
     public ResponseEntity<?> removeFromCart(@PathVariable Long cartItemId) {
         try {
+            // Получаем email текущего пользователя
+            String email = SecurityContextHolder.getContext().getAuthentication().getName();
+            User user = userService.getUserByEmail(email);
+            
+            if (user == null) {
+                logger.warning("Пользователь с email " + email + " не найден");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Пользователь не найден"));
+            }
+            
+            // Получаем элемент корзины
+            Cart cartItem = cartService.getCartItemById(cartItemId);
+            
+            // Проверяем принадлежность элемента корзины пользователю
+            if (!cartItem.getUser().getId().equals(user.getId())) {
+                logger.warning("Попытка удаления чужого товара из корзины. ID элемента: " + cartItemId + 
+                             ", пользователь: " + email);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "Нет доступа к этому элементу корзины"));
+            }
+            
+            // Удаляем элемент корзины
             cartService.removeFromCart(cartItemId);
+            logger.info("Удален элемент корзины с ID " + cartItemId + " пользователем " + email);
             return ResponseEntity.ok(Map.of("success", true));
-        } catch (Exception e) {
+            
+        } catch (ResourceNotFoundException e) {
+            logger.warning("Элемент корзины не найден: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (CartOperationException e) {
+            logger.warning("Ошибка при удалении из корзины: " + e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            logger.severe("Неожиданная ошибка при удалении из корзины: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Произошла ошибка: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Удаляет товар из корзины по параметрам (userId, productId, sizeId)
+     */
+    @DeleteMapping("/item")
+    public ResponseEntity<?> removeItemFromCart(@RequestBody Map<String, Object> request) {
+        try {
+            Long userId = Long.parseLong(request.get("userId").toString());
+            Long productId = Long.parseLong(request.get("productId").toString());
+            Long sizeId = Long.parseLong(request.get("sizeId").toString());
+            // Количество может быть null, если нужно удалить весь товар
+            Integer quantity = request.get("quantity") != null 
+                ? Integer.parseInt(request.get("quantity").toString()) 
+                : 0;
+            
+            boolean result = cartService.removeItemFromCart(userId, productId, sizeId, quantity);
+            
+            if (result) {
+                return ResponseEntity.ok(Map.of("success", true));
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Товар не найден в корзине"));
+            }
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Неверные параметры: " + e.getMessage()));
+        } catch (CartOperationException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Произошла ошибка: " + e.getMessage()));
         }
     }
 

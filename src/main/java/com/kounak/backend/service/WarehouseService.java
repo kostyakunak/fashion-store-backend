@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
 public class WarehouseService {
@@ -61,19 +62,14 @@ public class WarehouseService {
         Product product = productRepository.findById(productId)
             .orElseThrow(() -> new RuntimeException("Товар не найден с ID: " + productId));
             
-        // Возвращаем только те записи, где количество товара > 0
-        return warehouseRepository.findByProduct(product).stream()
-            .filter(item -> item.getQuantity() > 0)
-            .collect(Collectors.toList());
+        // Возвращаем все записи, чтобы фронтенд мог отобразить все размеры
+        return warehouseRepository.findByProduct(product);
     }
     
     // Метод для получения количества товара определенного размера на складе
     public int getProductQuantityBySize(Long productId, Long sizeId) {
-        List<Warehouse> items = warehouseRepository.findByProductIdAndSizeId(productId, sizeId);
-        if (items.isEmpty()) {
-            return 0;
-        }
-        return items.get(0).getQuantity();
+        Optional<Warehouse> warehouseItem = warehouseRepository.findByProductIdAndSizeId(productId, sizeId);
+        return warehouseItem.map(Warehouse::getQuantity).orElse(0);
     }
 
     public void deleteWarehouseEntry(Long id) {

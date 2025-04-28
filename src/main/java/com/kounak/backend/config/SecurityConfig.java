@@ -31,9 +31,10 @@ public class SecurityConfig {
         http
             .securityMatcher("/**")
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
+                .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/validate-token").permitAll()
                 .requestMatchers("/api/products/**", "/api/categories/**").permitAll()
                 .requestMatchers("/products/**", "/categories/**").permitAll()
+                .requestMatchers("/warehouse/**").permitAll()
                 .anyRequest().authenticated()
             )
             .csrf(csrf -> csrf.disable())

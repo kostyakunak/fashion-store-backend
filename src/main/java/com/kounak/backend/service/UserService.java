@@ -2,6 +2,7 @@ package com.kounak.backend.service;
 
 import com.kounak.backend.model.User;
 import com.kounak.backend.repository.UserRepository;
+import com.kounak.backend.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -69,5 +70,21 @@ public class UserService {
 
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
+    }
+
+    public User getUserByEmail(String email) {
+        logger.info("Поиск пользователя по email: " + email);
+        try {
+            return userRepository.findByEmail(email)
+                    .orElseThrow(() -> {
+                        logger.error("Пользователь с email {} не найден", email);
+                        return new ResourceNotFoundException("Пользователь с email " + email + " не найден");
+                    });
+        } catch (Exception e) {
+            if (!(e instanceof ResourceNotFoundException)) {
+                logger.error("Ошибка при поиске пользователя по email {}: {}", email, e.getMessage(), e);
+            }
+            throw e;
+        }
     }
 }

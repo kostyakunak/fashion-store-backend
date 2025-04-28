@@ -77,6 +77,7 @@ public class AuthController {
                 // Создание ответа с информацией о пользователе и токеном
                 Map<String, Object> response = new HashMap<>();
                 response.put("token", token);
+                response.put("id", user.getId());  // Добавляем ID пользователя
                 response.put("email", user.getEmail());
                 response.put("firstName", user.getFirstName());
                 response.put("lastName", user.getLastName());
@@ -130,6 +131,7 @@ public class AuthController {
             // Создаем ответ с информацией о пользователе и токеном
             Map<String, Object> response = new HashMap<>();
             response.put("token", token);
+            response.put("id", savedUser.getId());  // Добавляем ID пользователя
             response.put("email", savedUser.getEmail());
             response.put("firstName", savedUser.getFirstName());
             response.put("lastName", savedUser.getLastName());
