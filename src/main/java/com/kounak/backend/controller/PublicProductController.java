@@ -68,10 +68,26 @@ public class PublicProductController {
             "measurements", product.getMeasurements() != null ? product.getMeasurements() : "",
             "category", product.getCategory(),
             "images", images,
-            "price", price != null ? price.getOriginalPrice() : 0
+            "price", price != null ? price.getOriginalPrice() : 0.00 // Provide a default price if null
         );
         
         return ResponseEntity.ok(enrichedProduct);
+    }
+    
+    @GetMapping("/{productId}/images")
+    public ResponseEntity<List<Image>> getProductImages(@PathVariable Long productId) {
+        List<Image> images = imageService.getImagesByProductId(productId);
+        return ResponseEntity.ok(images);
+    }
+    
+    @GetMapping("/{productId}/price")
+    public ResponseEntity<Price> getProductPrice(@PathVariable Long productId) {
+        Price price = priceService.getLatestPriceByProductId(productId);
+        if (price != null) {
+            return ResponseEntity.ok(price);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping("/category/{categoryId}")
@@ -95,4 +111,4 @@ public class PublicProductController {
         
         return ResponseEntity.ok(enrichedProducts);
     }
-} 
+}

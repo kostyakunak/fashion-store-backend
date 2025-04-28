@@ -9,9 +9,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 @Service
 public class ProductService {
+
+    private static final Logger logger = Logger.getLogger(ProductService.class.getName());
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
@@ -23,7 +26,7 @@ public class ProductService {
     private final OrderDetailsRepository orderDetailsRepository;
 
     public ProductService(
-            ProductRepository productRepository, 
+            ProductRepository productRepository,
             CategoryRepository categoryRepository,
             ImageRepository imageRepository,
             PriceRepository priceRepository,
@@ -46,8 +49,14 @@ public class ProductService {
     }
 
     public Product getProductById(Long id) {
-        return productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+        logger.info("Fetching product by ID: " + id);
+        Optional<Product> product = productRepository.findById(id);
+        if (product.isPresent()) {
+            logger.info("Product found: " + product.get().getName());
+        } else {
+            logger.warning("Product not found for ID: " + id);
+        }
+        return product.orElseThrow(() -> new RuntimeException("Product not found"));
     }
 
     public Product addProduct(Product product) {
@@ -102,39 +111,39 @@ public class ProductService {
         // Проверяем существование товара
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Товар с ID " + id + " не найден"));
-        
+
         // Проверяем, используется ли товар в заказах
         List<OrderDetails> existingOrders = orderDetailsRepository.findByProductId(id);
         if (!existingOrders.isEmpty() && !forceDelete) {
-            throw new RuntimeException("Нельзя удалить товар с ID " + id + ", так как он присутствует в " 
+            throw new RuntimeException("Нельзя удалить товар с ID " + id + ", так как он присутствует в "
                     + existingOrders.size() + " заказах. Используйте forceDelete=true для принудительного удаления.");
         }
-        
+
         // Удаляем связанные данные в правильном порядке
         try {
             // 1. Удаляем из корзин
             cartRepository.deleteByProductId(id);
-            
+
             // 2. Удаляем из списков желаний
             wishlistRepository.deleteByProductId(id);
-            
+
             // 3. Удаляем из деталей заказов (если forceDelete=true)
             if (forceDelete && !existingOrders.isEmpty()) {
                 orderDetailsRepository.deleteByProductId(id);
             }
-            
+
             // 4. Удаляем записи склада
             warehouseRepository.deleteByProductId(id);
-            
+
             // 5. Удаляем цены
             priceRepository.deleteByProductId(id);
-            
+
             // 6. Удаляем изображения
             imageRepository.deleteByProductId(id);
-            
+
             // 7. Удаляем сам товар
             productRepository.delete(product);
-            
+
             return true;
         } catch (Exception e) {
             // Если возникла ошибка, транзакция автоматически откатится благодаря @Transactional

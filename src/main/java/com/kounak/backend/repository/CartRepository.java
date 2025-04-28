@@ -12,7 +12,7 @@ import java.util.List;
 
 public interface CartRepository extends JpaRepository<Cart, Long> {
     
-    @EntityGraph(attributePaths = {"product", "user"})
+    @EntityGraph(attributePaths = {"product", "user", "product.category"})
     List<Cart> findByUserId(Long userId);
     
     @Query("SELECT c FROM Cart c WHERE c.user.id = :userId AND c.product.id = :productId AND c.sizeId = :sizeId")

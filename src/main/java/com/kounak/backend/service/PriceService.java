@@ -8,9 +8,12 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.logging.Logger;
 
 @Service
 public class PriceService {
+    private static final Logger logger = Logger.getLogger(PriceService.class.getName());
+
     private final PriceRepository priceRepository;
 
     @Autowired
@@ -34,11 +37,11 @@ public class PriceService {
     public Price updatePrice(Long id, Price price) {
         Price existingPrice = priceRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Price not found with id: " + id));
-        
+
         existingPrice.setOriginalPrice(price.getOriginalPrice());
         existingPrice.setPrice(price.getPrice());
         existingPrice.setProduct(price.getProduct());
-        
+
         return priceRepository.save(existingPrice);
     }
 
@@ -55,10 +58,13 @@ public class PriceService {
     }
 
     public Price getLatestPriceByProductId(Long productId) {
+        logger.info("Fetching latest price for product ID: " + productId);
         List<Price> prices = priceRepository.findByProductIdOrderByCreatedAtDesc(productId);
         if (prices == null || prices.isEmpty()) {
+            logger.warning("No price found for product ID: " + productId);
             return null;
         }
+        logger.info("Found latest price for product ID: " + productId);
         return prices.get(0);
     }
 
