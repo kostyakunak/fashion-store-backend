@@ -136,11 +136,22 @@ public class OrderService {
         if (order.getUser() != null) {
             existingOrder.setUser(order.getUser());
         }
-        if (order.getTotalPrice() != null) {
-            existingOrder.setTotalPrice(order.getTotalPrice());
-        }
         
         // Сохраняем только обновленные поля
         return orderRepository.save(existingOrder);
+    }
+    
+    /**
+     * Get all orders for a specific user
+     */
+    public List<Order> getOrdersByUserId(Long userId) {
+        return orderRepository.findByUserId(userId);
+    }
+    
+    /**
+     * Get order details for a specific order
+     */
+    public List<OrderDetails> getOrderDetailsByOrderId(Long orderId) {
+        return orderDetailsRepository.findByOrderId(orderId);
     }
 }

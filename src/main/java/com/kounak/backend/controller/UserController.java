@@ -125,6 +125,9 @@ public class UserController {
                 existingUser.setAddress(user.getAddress());
             }
             
+            // Обновляем статус аккаунта (enabled/disabled)
+            existingUser.setEnabled(user.isEnabled());
+            
             User updatedUser = userService.updateUser(id, existingUser);
             logger.info("Обновлен пользователь с ID {}", id);
             return ResponseEntity.ok(updatedUser);

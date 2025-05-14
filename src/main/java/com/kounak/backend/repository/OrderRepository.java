@@ -10,4 +10,10 @@ import java.util.List;
 public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("SELECT o FROM Order o LEFT JOIN FETCH o.items WHERE o IS NOT NULL")
     List<Order> findAllWithDetails();
+    
+    /**
+     * Find orders by user ID
+     */
+    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.items WHERE o.user.id = :userId")
+    List<Order> findByUserId(Long userId);
 }

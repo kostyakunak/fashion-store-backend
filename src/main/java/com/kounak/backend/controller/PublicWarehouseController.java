@@ -27,8 +27,8 @@ public class PublicWarehouseController {
 
     @GetMapping("/product/{productId}/sizes")
     public ResponseEntity<List<Map<String, Object>>> getAvailableSizesForProduct(@PathVariable Long productId) {
-        // Получаем все записи со склада для данного товара, где количество > 0
-        List<Warehouse> warehouseItems = warehouseService.getAvailableWarehouseItemsByProductId(productId);
+        // Получаем все записи со склада для данного товара (независимо от количества)
+        List<Warehouse> warehouseItems = warehouseService.getAllWarehouseItemsByProductId(productId);
         
         // Создаем расширенные объекты размеров с информацией о наличии
         List<Map<String, Object>> sizesWithAvailability = warehouseItems.stream()

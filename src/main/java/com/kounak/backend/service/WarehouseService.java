@@ -55,7 +55,7 @@ public class WarehouseService {
         return warehouseRepository.findAll();
     }
     
-    // Метод для получения доступных размеров товара
+    // Метод для получения доступных размеров товара (с количеством > 0)
     public List<Warehouse> getAvailableWarehouseItemsByProductId(Long productId) {
         // Получаем все записи со склада для данного товара
         Product product = productRepository.findById(productId)
@@ -65,6 +65,16 @@ public class WarehouseService {
         return warehouseRepository.findByProduct(product).stream()
             .filter(item -> item.getQuantity() > 0)
             .collect(Collectors.toList());
+    }
+    
+    // Метод для получения всех размеров товара (независимо от количества)
+    public List<Warehouse> getAllWarehouseItemsByProductId(Long productId) {
+        // Получаем все записи со склада для данного товара
+        Product product = productRepository.findById(productId)
+            .orElseThrow(() -> new RuntimeException("Товар не найден с ID: " + productId));
+            
+        // Возвращаем все записи, независимо от количества
+        return warehouseRepository.findByProduct(product);
     }
     
     // Метод для получения количества товара определенного размера на складе

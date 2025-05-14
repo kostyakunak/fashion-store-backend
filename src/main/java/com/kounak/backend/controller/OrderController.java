@@ -117,12 +117,6 @@ public class OrderController {
                 order.setUser(user);
             }
             
-            // Обновляем общую стоимость, если она указана
-            if (payload.containsKey("totalPrice")) {
-                Double totalPrice = Double.valueOf(payload.get("totalPrice").toString());
-                order.setTotalPrice(BigDecimal.valueOf(totalPrice));
-            }
-            
             // Сохраняем изменения
             Order updatedOrder = orderService.updateOrder(order);
             return ResponseEntity.ok(updatedOrder);

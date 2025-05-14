@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -46,6 +47,13 @@ public class AuthController {
             String email = loginRequest.get("email");
             String password = loginRequest.get("password");
             
+            // Check if user exists and is enabled
+            Optional<User> userOpt = userRepository.findByEmail(email);
+            if (userOpt.isPresent() && !userOpt.get().isEnabled()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Collections.singletonMap("message", "Account is disabled. Please contact administrator."));
+            }
+            
             // Аутентификация пользователя
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(email, password)
@@ -55,10 +63,10 @@ public class AuthController {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             
             // Получение данных пользователя
-            Optional<User> userOpt = userRepository.findByEmail(email);
+            Optional<User> userOptional = userRepository.findByEmail(email);
             
-            if (userOpt.isPresent()) {
-                User user = userOpt.get();
+            if (userOptional.isPresent()) {
+                User user = userOptional.get();
                 
                 // Создаем UserDetails для генерации токена
                 UserDetails userDetails = new org.springframework.security.core.userdetails.User(
@@ -81,16 +89,23 @@ public class AuthController {
                 response.put("firstName", user.getFirstName());
                 response.put("lastName", user.getLastName());
                 response.put("role", user.getRole());
+                response.put("roles", Collections.singletonList("ROLE_" + user.getRole()));
                 
                 return ResponseEntity.ok(response);
             } else {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body("Ошибка при получении данных пользователя");
+                        .body(Collections.singletonMap("message", "Ошибка при получении данных пользователя"));
             }
             
+        } catch (DisabledException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Collections.singletonMap("message", "Account is disabled"));
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Неверный email или пароль");
+                    .body(Collections.singletonMap("message", "Неверный email или пароль"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("message", "Ошибка аутентификации: " + e.getMessage()));
         }
     }
 
@@ -100,7 +115,7 @@ public class AuthController {
             // Проверяем, существует ли пользователь с таким email
             if (userRepository.existsByEmail(registerRequest.get("email"))) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("Email уже используется");
+                        .body(Collections.singletonMap("message", "Email уже используется"));
             }
             
             // Создаем нового пользователя
@@ -134,18 +149,25 @@ public class AuthController {
             response.put("firstName", savedUser.getFirstName());
             response.put("lastName", savedUser.getLastName());
             response.put("role", savedUser.getRole());
+            response.put("roles", Collections.singletonList("ROLE_" + savedUser.getRole()));
             
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
             
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Ошибка при регистрации: " + e.getMessage());
+                    .body(Collections.singletonMap("message", "Ошибка при регистрации: " + e.getMessage()));
         }
     }
     
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
         SecurityContextHolder.clearContext();
-        return ResponseEntity.ok("Выход выполнен успешно");
+        return ResponseEntity.ok(Collections.singletonMap("message", "Выход выполнен успешно"));
     }
-} 
+    
+    @GetMapping("/check")
+    public ResponseEntity<?> checkAuth() {
+        // This endpoint can be used to verify if the user is authenticated
+        return ResponseEntity.ok(Collections.singletonMap("authenticated", true));
+    }
+}

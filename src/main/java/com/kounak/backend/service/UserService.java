@@ -6,7 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserService {
@@ -15,6 +17,11 @@ public class UserService {
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
+    }
+    
+    // Find user by email
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 
     // ✅ Получить список всех пользователей
@@ -48,6 +55,10 @@ public class UserService {
     }
 
     public User createUser(User user) {
+        // Устанавливаем дату создания, если она не задана
+        if (user.getCreatedAt() == null) {
+            user.setCreatedAt(LocalDateTime.now());
+        }
         return userRepository.save(user);
     }
 
@@ -58,6 +69,8 @@ public class UserService {
         existingUser.setPhone(user.getPhone());
         existingUser.setEmail(user.getEmail());
         existingUser.setRole(user.getRole());
+        existingUser.setEnabled(user.isEnabled());
+        existingUser.setAddress(user.getAddress());
         
         // Обновляем пароль только если он был передан
         if (user.getPassword() != null && !user.getPassword().isEmpty()) {

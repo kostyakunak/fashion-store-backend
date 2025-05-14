@@ -16,6 +16,11 @@ public class WishlistService {
         this.wishlistRepository = wishlistRepository;
     }
 
+    public Wishlist getWishlistById(Long id) {
+        return wishlistRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Wishlist item not found"));
+    }
+
     public Wishlist addToWishlist(Wishlist wishlist) {
         return wishlistRepository.save(wishlist);
     }
