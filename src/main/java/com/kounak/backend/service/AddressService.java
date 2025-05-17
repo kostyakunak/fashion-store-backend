@@ -51,4 +51,8 @@ public class AddressService {
         logger.info("Получение адреса по ID: {}", id);
         return addressRepository.findById(id);
     }
+
+    public List<Address> getAddressesByUserId(Long userId) {
+        return addressRepository.findByUserId(userId);
+    }
 }

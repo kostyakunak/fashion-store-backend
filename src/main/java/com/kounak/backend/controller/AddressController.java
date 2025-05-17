@@ -36,18 +36,6 @@ public class AddressController {
         }
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<List<Address>> getAddressesByUser(@PathVariable Long userId) {
-        try {
-            List<Address> addresses = addressService.getAddressesByUser(userId);
-            logger.info("Получено {} адресов для пользователя с ID {}", addresses.size(), userId);
-            return ResponseEntity.ok(addresses);
-        } catch (Exception e) {
-            logger.error("Ошибка при получении адресов для пользователя {}: {}", userId, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
     @PostMapping
     public ResponseEntity<Address> addAddress(@RequestBody Address address) {
         try {
@@ -127,5 +115,10 @@ public class AddressController {
             logger.error("Ошибка при удалении адреса {}: {}", id, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    @GetMapping("/user/{userId}")
+    public List<Address> getAddressesByUser(@PathVariable Long userId) {
+        return addressService.getAddressesByUserId(userId);
     }
 }

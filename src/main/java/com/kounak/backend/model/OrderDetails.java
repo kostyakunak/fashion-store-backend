@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 public class OrderDetails {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne

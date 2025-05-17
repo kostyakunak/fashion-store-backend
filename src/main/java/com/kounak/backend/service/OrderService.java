@@ -40,23 +40,45 @@ public class OrderService {
         order.setCreatedAt(LocalDateTime.now());
         order.setTotalPrice(BigDecimal.ZERO);
 
-        // Проверяем существование ID
-        if (orderRepository.existsById(order.getId())) {
-            throw new RuntimeException("Order with ID " + order.getId() + " already exists");
+        // Удаляем id, если вдруг был установлен
+        order.setId(null);
+
+        // Инициализируем коллекцию, если она null
+        if (order.getItems() == null) {
+            order.setItems(new ArrayList<>());
         }
 
-        // Сохраняем заказ
+        // Сохраняем заказ (id сгенерируется базой)
         Order savedOrder = orderRepository.save(order);
 
-        // Сохраняем детали заказа
+        // Добавляем детали заказа через коллекцию items
         if (items != null && !items.isEmpty()) {
             for (OrderDetails item : items) {
                 item.setOrder(savedOrder);
-                orderDetailsRepository.save(item);
+                savedOrder.getItems().add(item);
             }
+            // Сохраняем заказ с новыми items (Hibernate сам сохранит OrderDetails)
+            savedOrder = orderRepository.save(savedOrder);
         }
 
+        // Пересчитываем сумму заказа (если не используем триггер)
+        BigDecimal total = recalculateOrderTotal(savedOrder.getId());
+        savedOrder.setTotalPrice(total);
+        orderRepository.save(savedOrder);
+
         return savedOrder;
+    }
+
+    // Новый метод для пересчёта суммы заказа
+    public BigDecimal recalculateOrderTotal(Long orderId) {
+        List<OrderDetails> details = orderDetailsRepository.findByOrderId(orderId);
+        BigDecimal total = BigDecimal.ZERO;
+        for (OrderDetails item : details) {
+            if (item != null && item.getPriceAtPurchase() != null) {
+                total = total.add(item.getPriceAtPurchase().multiply(BigDecimal.valueOf(item.getQuantity())));
+            }
+        }
+        return total;
     }
 
     // ✅ Получение всех заказов

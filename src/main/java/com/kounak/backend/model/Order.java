@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class Order {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
@@ -33,6 +34,11 @@ public class Order {
 
     @Column(name = "total_price", precision = 10, scale = 2)
     private BigDecimal totalPrice;
+
+    @ManyToOne
+    @JoinColumn(name = "address_id")
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"user"})
+    private Address address;
 
     // Конструкторы
     public Order() {}
@@ -82,5 +88,13 @@ public class Order {
 
     public void setTotalPrice(BigDecimal totalPrice) {
         this.totalPrice = totalPrice;
+    }
+
+    public Address getAddress() {
+        return address;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
     }
 }

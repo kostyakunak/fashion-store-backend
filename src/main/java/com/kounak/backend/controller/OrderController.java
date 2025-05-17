@@ -5,6 +5,7 @@ import com.kounak.backend.service.OrderService;
 import com.kounak.backend.service.UserService;
 import com.kounak.backend.service.ProductService;
 import com.kounak.backend.service.SizeService;
+import com.kounak.backend.service.AddressService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,26 +26,22 @@ public class OrderController {
     private final UserService userService;
     private final ProductService productService;
     private final SizeService sizeService;
+    private final AddressService addressService;
     private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
 
     @Autowired
     public OrderController(OrderService orderService, UserService userService,
-                          ProductService productService, SizeService sizeService) {
+                          ProductService productService, SizeService sizeService, AddressService addressService) {
         this.orderService = orderService;
         this.userService = userService;
         this.productService = productService;
         this.sizeService = sizeService;
+        this.addressService = addressService;
     }
 
     @PostMapping
     public ResponseEntity<?> createOrder(@RequestBody Map<String, Object> payload) {
         try {
-            // Проверяем наличие ID
-            if (!payload.containsKey("id")) {
-                return ResponseEntity.badRequest().body("id is required");
-            }
-            Long id = Long.valueOf(payload.get("id").toString());
-
             // Проверяем наличие userId
             Object userIdObj = payload.get("userId");
             if (userIdObj == null) {
@@ -57,13 +54,18 @@ public class OrderController {
 
             // Создаем заказ
             Order order = new Order();
-            order.setId(id);
             order.setUser(user);
             
             // Устанавливаем статус
             String status = (String) payload.get("status");
             if (status != null) {
                 order.setStatus(OrderStatus.valueOf(status));
+            }
+
+            // Устанавливаем адрес, если передан addressId
+            if (payload.containsKey("addressId") && payload.get("addressId") != null) {
+                Long addressId = Long.valueOf(payload.get("addressId").toString());
+                addressService.getAddressById(addressId).ifPresent(order::setAddress);
             }
 
             // Создаем заказ
@@ -115,6 +117,12 @@ public class OrderController {
                 Long userId = Long.valueOf(payload.get("userId").toString());
                 User user = userService.getUserById(userId);
                 order.setUser(user);
+            }
+
+            // Обновляем адрес, если указан
+            if (payload.containsKey("addressId") && payload.get("addressId") != null) {
+                Long addressId = Long.valueOf(payload.get("addressId").toString());
+                addressService.getAddressById(addressId).ifPresent(order::setAddress);
             }
             
             // Сохраняем изменения
