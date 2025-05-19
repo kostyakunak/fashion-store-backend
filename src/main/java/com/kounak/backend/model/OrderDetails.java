@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 @Entity
 @Table(name = "order_details")
@@ -36,6 +37,10 @@ public class OrderDetails {
 
     // Удаляем ненужное поле price
     // private double price;
+
+    // enrichment для фронта: productMap
+    @Transient
+    private Map<String, Object> productMap;
 
     // Конструкторы
     public OrderDetails() {}
@@ -69,4 +74,11 @@ public class OrderDetails {
     // Убираем старый геттер и сеттер для price
     // public double getPrice() { return price; }
     // public void setPrice(double price) { this.price = price; }
+
+    public Map<String, Object> getProductMap() {
+        return productMap;
+    }
+    public void setProductMap(Map<String, Object> productMap) {
+        this.productMap = productMap;
+    }
 }

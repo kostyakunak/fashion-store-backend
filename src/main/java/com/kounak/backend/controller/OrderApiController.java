@@ -6,6 +6,8 @@ import com.kounak.backend.model.OrderDetails;
 import com.kounak.backend.model.User;
 import com.kounak.backend.service.OrderService;
 import com.kounak.backend.service.UserService;
+import com.kounak.backend.service.ImageService;
+import com.kounak.backend.model.Image;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -24,10 +27,12 @@ public class OrderApiController {
 
     private final OrderService orderService;
     private final UserService userService;
+    private final ImageService imageService;
 
-    public OrderApiController(OrderService orderService, UserService userService) {
+    public OrderApiController(OrderService orderService, UserService userService, ImageService imageService) {
         this.orderService = orderService;
         this.userService = userService;
+        this.imageService = imageService;
     }
 
     /**
@@ -54,9 +59,38 @@ public class OrderApiController {
 
     @GetMapping("/my")
     public ResponseEntity<?> getMyOrders() {
+        System.out.println(">>> getMyOrders called");
         try {
             User authenticatedUser = getAuthenticatedUser();
             List<Order> orders = orderService.getOrdersByUserId(authenticatedUser.getId());
+            // enrich products with mainImageUrl
+            for (Order order : orders) {
+                if (order.getItems() != null) {
+                    for (OrderDetails item : order.getItems()) {
+                        if (item.getProduct() != null) {
+                            Long productId = item.getProduct().getId();
+                            List<Image> images = imageService.getImagesByProductId(productId);
+                            String mainImageUrl = null;
+                            if (images != null && !images.isEmpty()) {
+                                // Сначала ищем isMain, потом sortOrder=0, иначе первое
+                                mainImageUrl = images.stream().filter(img -> Boolean.TRUE.equals(img.getIsMain())).map(Image::getImageUrl).findFirst()
+                                        .orElse(images.stream().filter(img -> img.getSortOrder() != null && img.getSortOrder() == 0).map(Image::getImageUrl).findFirst()
+                                        .orElse(images.get(0).getImageUrl()));
+                            }
+                            // enrich product with mainImageUrl (через map, чтобы не ломать сериализацию)
+                            if (mainImageUrl != null) {
+                                // Костыль: enrich product через reflection-like map
+                                Map<String, Object> productMap = new HashMap<>();
+                                productMap.put("id", item.getProduct().getId());
+                                productMap.put("name", item.getProduct().getName());
+                                productMap.put("mainImageUrl", mainImageUrl);
+                                // Можно добавить другие поля по необходимости
+                                item.setProductMap(productMap); // потребуется добавить setProductMap в OrderDetails
+                            }
+                        }
+                    }
+                }
+            }
             return ResponseEntity.ok(orders);
         } catch (AuthException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));

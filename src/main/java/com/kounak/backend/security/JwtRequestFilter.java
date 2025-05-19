@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -23,6 +25,8 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
+
+    private static final Logger logger = LoggerFactory.getLogger(JwtRequestFilter.class);
 
     @Autowired
     private UserDetailsService userDetailsService;
@@ -46,12 +50,12 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             try {
                 username = jwtTokenUtil.getUsernameFromToken(jwt);
                 roles = jwtTokenUtil.getRolesFromToken(jwt);
+                logger.info("[JWT] Токен получен. Username: {} | Roles: {}", username, roles);
             } catch (Exception e) {
-                // Ошибка при разборе токена
-                logger.error("JWT Token has expired or is invalid", e);
+                logger.error("[JWT] Ошибка разбора токена: {} | Токен: {}", e.getMessage(), jwt, e);
             }
         } else {
-            logger.warn("JWT Token does not begin with Bearer String");
+            logger.warn("[JWT] JWT Token does not begin with Bearer String. Authorization header: {}", authorizationHeader);
         }
 
         // Если имя пользователя из токена найдено и в контексте аутентификации еще нет пользователя
