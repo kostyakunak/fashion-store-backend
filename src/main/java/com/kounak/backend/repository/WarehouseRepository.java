@@ -27,4 +27,9 @@ public interface WarehouseRepository extends JpaRepository<Warehouse, Long> {
     @Transactional
     @Query("DELETE FROM Warehouse w WHERE w.product.id = :productId")
     void deleteByProductId(@Param("productId") Long productId);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Warehouse w SET w.quantity = w.quantity - :qty WHERE w.product.id = :productId AND w.size.id = :sizeId AND w.quantity >= :qty")
+    int decrementProductQuantity(@Param("productId") Long productId, @Param("sizeId") Long sizeId, @Param("qty") int qty);
 }

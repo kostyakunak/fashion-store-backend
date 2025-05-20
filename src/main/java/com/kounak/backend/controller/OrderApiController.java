@@ -8,6 +8,14 @@ import com.kounak.backend.service.OrderService;
 import com.kounak.backend.service.UserService;
 import com.kounak.backend.service.ImageService;
 import com.kounak.backend.model.Image;
+import com.kounak.backend.service.WarehouseService;
+import com.kounak.backend.model.Product;
+import com.kounak.backend.model.Size;
+import com.kounak.backend.model.Address;
+import com.kounak.backend.service.ProductService;
+import com.kounak.backend.service.SizeService;
+import com.kounak.backend.service.AddressService;
+import java.math.BigDecimal;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,11 +36,19 @@ public class OrderApiController {
     private final OrderService orderService;
     private final UserService userService;
     private final ImageService imageService;
+    private final WarehouseService warehouseService;
+    private final ProductService productService;
+    private final SizeService sizeService;
+    private final AddressService addressService;
 
-    public OrderApiController(OrderService orderService, UserService userService, ImageService imageService) {
+    public OrderApiController(OrderService orderService, UserService userService, ImageService imageService, WarehouseService warehouseService, ProductService productService, SizeService sizeService, AddressService addressService) {
         this.orderService = orderService;
         this.userService = userService;
         this.imageService = imageService;
+        this.warehouseService = warehouseService;
+        this.productService = productService;
+        this.sizeService = sizeService;
+        this.addressService = addressService;
     }
 
     /**
@@ -132,19 +148,79 @@ public class OrderApiController {
     public ResponseEntity<?> createOrder(@RequestBody Map<String, Object> payload) {
         try {
             User authenticatedUser = getAuthenticatedUser();
-            
-            // Create order logic here
-            // This would typically involve:
-            // 1. Creating an Order entity with the authenticated user
-            // 2. Converting cart items to OrderDetails
-            // 3. Saving the order and its details
-            
-            // This is a placeholder implementation
+
+            // 1. Получаем адрес доставки (addressId)
+            Long addressId = payload.get("addressId") != null ? Long.valueOf(payload.get("addressId").toString()) : null;
+            Address address = null;
+            if (addressId != null) {
+                address = addressService.getAddressById(addressId).orElse(null);
+                if (address == null) {
+                    return ResponseEntity.badRequest().body(Map.of("error", "Адрес не найден"));
+                }
+            }
+
+            // 2. Получаем способ оплаты (paymentMethod)
+            String paymentMethod = payload.get("paymentMethod") != null ? payload.get("paymentMethod").toString() : null;
+            // (можно сохранить в заказе, если нужно)
+
+            // 3. Получаем список товаров (items)
+            List<Map<String, Object>> itemsRaw = (List<Map<String, Object>>) payload.get("items");
+            if (itemsRaw == null || itemsRaw.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Корзина пуста"));
+            }
+
+            // 4. Проверяем остатки и формируем OrderDetails
+            List<OrderDetails> orderDetailsList = new java.util.ArrayList<>();
+            for (Map<String, Object> item : itemsRaw) {
+                Long productId = Long.valueOf(item.get("productId").toString());
+                Long sizeId = Long.valueOf(item.get("sizeId").toString());
+                int quantity = Integer.parseInt(item.get("quantity").toString());
+                BigDecimal price = new BigDecimal(item.get("price").toString());
+
+                // Проверяем остаток
+                int stock = warehouseService.getProductQuantityBySize(productId, sizeId);
+                if (stock < quantity) {
+                    return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                        "error", "Недостаточно товара на складе",
+                        "productId", productId,
+                        "sizeId", sizeId,
+                        "available", stock,
+                        "requested", quantity
+                    ));
+                }
+            }
+            // 5. Списываем остатки и формируем OrderDetails
+            for (Map<String, Object> item : itemsRaw) {
+                Long productId = Long.valueOf(item.get("productId").toString());
+                Long sizeId = Long.valueOf(item.get("sizeId").toString());
+                int quantity = Integer.parseInt(item.get("quantity").toString());
+                BigDecimal price = new BigDecimal(item.get("price").toString());
+
+                boolean decremented = warehouseService.decrementProductQuantity(productId, sizeId, quantity);
+                if (!decremented) {
+                    return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                        "error", "Не удалось списать остаток (возможно, товар уже разобрали)",
+                        "productId", productId,
+                        "sizeId", sizeId
+                    ));
+                }
+                Product product = productService.getProductById(productId);
+                Size size = sizeService.getSizeById(sizeId);
+                OrderDetails orderDetails = new OrderDetails();
+                orderDetails.setProduct(product);
+                orderDetails.setSize(size);
+                orderDetails.setQuantity(quantity);
+                orderDetails.setPriceAtPurchase(price);
+                orderDetailsList.add(orderDetails);
+            }
+
+            // 6. Создаём заказ
             Order order = new Order();
             order.setUser(authenticatedUser);
-            // Set other order properties from payload
-            
-            Order savedOrder = orderService.createOrder(order, List.of());
+            order.setAddress(address);
+            // Можно сохранить paymentMethod, если есть поле
+            // order.setPaymentMethod(paymentMethod);
+            Order savedOrder = orderService.createOrder(order, orderDetailsList);
             return ResponseEntity.ok(savedOrder);
         } catch (AuthException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));

@@ -122,4 +122,13 @@ public class WarehouseService {
             return warehouseRepository.save(warehouse);
         }
     }
+
+    /**
+     * Списывает остаток товара по productId и sizeId на складе
+     * @return true если успешно, false если не хватило остатков
+     */
+    public boolean decrementProductQuantity(Long productId, Long sizeId, int qty) {
+        int updated = warehouseRepository.decrementProductQuantity(productId, sizeId, qty);
+        return updated > 0;
+    }
 }
