@@ -61,6 +61,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/images/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/warehouse/product/*/sizes").permitAll()
                 .requestMatchers(HttpMethod.GET, "/warehouse/product/*/sizes").permitAll()
                 
                 // Admin endpoints require ADMIN role

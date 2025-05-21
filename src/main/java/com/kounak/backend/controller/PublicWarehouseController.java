@@ -2,7 +2,6 @@ package com.kounak.backend.controller;
 
 import com.kounak.backend.model.Size;
 import com.kounak.backend.model.Warehouse;
-import com.kounak.backend.service.SizeService;
 import com.kounak.backend.service.WarehouseService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,16 +12,13 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
-@RequestMapping("/warehouse")
+@RequestMapping("/api/public/warehouse")
 public class PublicWarehouseController {
 
     private final WarehouseService warehouseService;
-    private final SizeService sizeService;
 
-    public PublicWarehouseController(WarehouseService warehouseService, SizeService sizeService) {
+    public PublicWarehouseController(WarehouseService warehouseService) {
         this.warehouseService = warehouseService;
-        this.sizeService = sizeService;
     }
 
     @GetMapping("/product/{productId}/sizes")
