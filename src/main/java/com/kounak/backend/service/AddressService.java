@@ -25,6 +25,10 @@ public class AddressService {
 
     public Address addAddress(Address address) {
         logger.info("Добавление нового адреса");
+        if (address.isMain()) {
+            setMainAddress(address);
+            return addressRepository.save(address);
+        }
         return addressRepository.save(address);
     }
 
@@ -35,6 +39,10 @@ public class AddressService {
 
     public Address updateAddress(Address address) {
         logger.info("Обновление адреса с ID: {}", address.getId());
+        if (address.isMain()) {
+            setMainAddress(address);
+            return addressRepository.save(address);
+        }
         return addressRepository.save(address);
     }
 
@@ -54,5 +62,18 @@ public class AddressService {
 
     public List<Address> getAddressesByUserId(Long userId) {
         return addressRepository.findByUserId(userId);
+    }
+
+    /**
+     * Сбрасывает isMain у всех других адресов пользователя
+     */
+    public void setMainAddress(Address address) {
+        List<Address> addresses = addressRepository.findByUserId(address.getUser().getId());
+        for (Address a : addresses) {
+            if (!a.getId().equals(address.getId()) && a.isMain()) {
+                a.setIsMain(false);
+                addressRepository.save(a);
+            }
+        }
     }
 }

@@ -39,6 +39,9 @@ public class AddressController {
     @PostMapping
     public ResponseEntity<Address> addAddress(@RequestBody Address address) {
         try {
+            logger.info("[addAddress] Получен Address: {}", address);
+            logger.info("[addAddress] userId: {}, isMain: {}, recipientFirstName: {}, recipientLastName: {}", 
+                address.getUser() != null ? address.getUser().getId() : null, address.isMain(), address.getRecipientFirstName(), address.getRecipientLastName());
             if (address.getUser() == null || address.getUser().getId() == null) {
                 logger.error("Отсутствует ID пользователя в запросе");
                 return ResponseEntity.badRequest().build();
@@ -50,13 +53,9 @@ public class AddressController {
                 logger.error("Пользователь с ID {} не найден", address.getUser().getId());
                 return ResponseEntity.badRequest().build();
             }
-            
-            // Устанавливаем пользователя в адрес
             address.setUser(user);
-            
-            // Важно: сбрасываем ID, чтобы работала автогенерация
             address.setId(null);
-            
+            // isMain уже попадёт из запроса, если фронт отправляет
             Address savedAddress = addressService.addAddress(address);
             logger.info("Добавлен новый адрес с ID {}", savedAddress.getId());
             return ResponseEntity.ok(savedAddress);
@@ -69,28 +68,25 @@ public class AddressController {
     @PutMapping("/{id}")
     public ResponseEntity<Address> updateAddress(@PathVariable Long id, @RequestBody Address address) {
         try {
+            logger.info("[updateAddress] Получен Address: {}", address);
+            logger.info("[updateAddress] userId: {}, isMain: {}, recipientFirstName: {}, recipientLastName: {}", 
+                address.getUser() != null ? address.getUser().getId() : null, address.isMain(), address.getRecipientFirstName(), address.getRecipientLastName());
             if (address.getUser() == null || address.getUser().getId() == null) {
                 logger.error("Отсутствует ID пользователя в запросе");
                 return ResponseEntity.badRequest().build();
             }
-
-            // Получаем пользователя из базы
             User user = userService.getUserById(address.getUser().getId());
             if (user == null) {
                 logger.error("Пользователь с ID {} не найден", address.getUser().getId());
                 return ResponseEntity.badRequest().build();
             }
-            
-            // Убеждаемся, что адрес существует
             if (!addressService.addressExists(id)) {
                 logger.error("Адрес с ID {} не найден", id);
                 return ResponseEntity.notFound().build();
             }
-            
-            // Устанавливаем ID и пользователя
             address.setId(id);
             address.setUser(user);
-            
+            // isMain уже попадёт из запроса, если фронт отправляет
             Address updatedAddress = addressService.updateAddress(address);
             logger.info("Обновлен адрес с ID {}", updatedAddress.getId());
             return ResponseEntity.ok(updatedAddress);

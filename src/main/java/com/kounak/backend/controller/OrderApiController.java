@@ -148,7 +148,7 @@ public class OrderApiController {
     public ResponseEntity<?> createOrder(@RequestBody Map<String, Object> payload) {
         try {
             User authenticatedUser = getAuthenticatedUser();
-
+            
             // 1. Получаем адрес доставки (addressId)
             Long addressId = payload.get("addressId") != null ? Long.valueOf(payload.get("addressId").toString()) : null;
             Address address = null;

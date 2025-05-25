@@ -1,6 +1,7 @@
 package com.kounak.backend.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 @Table(name = "addresses")
@@ -26,6 +27,10 @@ public class Address {
 
     @Column(name = "postal_code", nullable = false)
     private String postalCode;
+
+    @Column(name = "is_main", nullable = false)
+    @JsonProperty("isMain")
+    private boolean isMain = false;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -86,6 +91,14 @@ public class Address {
 
     public void setPostalCode(String postalCode) {
         this.postalCode = postalCode;
+    }
+
+    public boolean isMain() {
+        return isMain;
+    }
+
+    public void setIsMain(boolean isMain) {
+        this.isMain = isMain;
     }
 
     public User getUser() {
