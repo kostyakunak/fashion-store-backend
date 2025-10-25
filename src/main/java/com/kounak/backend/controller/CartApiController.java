@@ -132,6 +132,9 @@ public class CartApiController {
                 Cart existingItem = existingItems.get(0);
                 existingItem.setQuantity(existingItem.getQuantity() + quantity);
                 cartService.updateCartItem(existingItem.getId(), existingItem);
+                System.out.println("Updated existing cart item for user " + authenticatedUser.getId() + 
+                                 ", product " + productId + ", size " + sizeId + 
+                                 ", new quantity: " + existingItem.getQuantity());
                 return ResponseEntity.ok(existingItem);
             } else {
                 // If the product doesn't exist, create a new cart item
@@ -142,6 +145,9 @@ public class CartApiController {
                 cartItem.setQuantity(quantity);
                 
                 Cart savedItem = cartService.addToCart(cartItem);
+                System.out.println("Created new cart item for user " + authenticatedUser.getId() + 
+                                 ", product " + productId + ", size " + sizeId + 
+                                 ", quantity: " + quantity);
                 return ResponseEntity.ok(savedItem);
             }
         } catch (AuthException e) {
