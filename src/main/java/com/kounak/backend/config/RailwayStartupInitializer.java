@@ -23,6 +23,9 @@ public class RailwayStartupInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         System.out.println("Initializing Railway database asynchronously...");
 
+        // Add delay to ensure database connection is fully established
+        Thread.sleep(10000); // Wait 10 seconds for database to be ready
+
         // Run database initialization asynchronously to not block application startup
         CompletableFuture.runAsync(() -> {
             try {
