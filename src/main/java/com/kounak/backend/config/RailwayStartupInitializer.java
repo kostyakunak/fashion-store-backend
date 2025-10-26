@@ -47,7 +47,7 @@ public class RailwayStartupInitializer implements CommandLineRunner {
                     executeSqlFile("db/migration/V6__Modify_Order_Details_Table.sql");
 
                     // Execute data population scripts
-                    executeSqlFile("db/scripts/fill_database.sql");
+                    executeSqlFile("db/scripts/fill_database_fixed.sql");
 
                     System.out.println("Database initialization completed successfully!");
                 } else {
@@ -84,14 +84,28 @@ public class RailwayStartupInitializer implements CommandLineRunner {
     }
 
     private void executeSqlFile(String filePath) throws IOException {
-        ClassPathResource resource = new ClassPathResource(filePath);
-        if (resource.exists()) {
-            String sql = new String(Files.readAllBytes(Paths.get(resource.getURI())));
+        try {
+            // Try to read from classpath first (for JAR)
+            ClassPathResource resource = new ClassPathResource(filePath);
+            String sql;
+
+            if (resource.exists()) {
+                sql = new String(Files.readAllBytes(Paths.get(resource.getURI())));
+            } else {
+                // Fallback to file system (for development)
+                try {
+                    sql = new String(Files.readAllBytes(Paths.get(filePath)));
+                } catch (Exception e) {
+                    System.out.println("SQL file not found: " + filePath + " (this is normal for Railway deployment)");
+                    return;
+                }
+            }
+
             String[] statements = sql.split(";");
 
             for (String statement : statements) {
                 statement = statement.trim();
-                if (!statement.isEmpty()) {
+                if (!statement.isEmpty() && !statement.startsWith("--")) {
                     try {
                         jdbcTemplate.execute(statement);
                     } catch (Exception e) {
@@ -101,8 +115,8 @@ public class RailwayStartupInitializer implements CommandLineRunner {
                 }
             }
             System.out.println("Executed SQL file: " + filePath);
-        } else {
-            System.out.println("SQL file not found: " + filePath);
+        } catch (Exception e) {
+            System.out.println("Failed to execute SQL file " + filePath + ": " + e.getMessage());
         }
     }
 }
