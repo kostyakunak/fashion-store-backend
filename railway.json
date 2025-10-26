@@ -3,13 +3,11 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "java -jar -Dspring.profiles.active=production target/demo-0.0.1-SNAPSHOT.jar",
+    "startCommand": "java -jar -Dspring.profiles.active=production -Dserver.port=$PORT target/demo-0.0.1-SNAPSHOT.jar",
     "healthcheckPath": "/health",
-    "healthcheckTimeout": 300,
+    "healthcheckTimeout": 900,
+    "healthcheckInterval": 10,
     "restartPolicyType": "ON_FAILURE",
-    "restartPolicyMaxRetries": 10
-  },
-  "variables": {
-    "SPRING_PROFILES_ACTIVE": "production"
+    "restartPolicyMaxRetries": 30
   }
 }
