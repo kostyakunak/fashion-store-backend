@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.concurrent.CompletableFuture;
 
 @Component
 @Profile("production")
@@ -20,39 +21,44 @@ public class RailwayStartupInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        System.out.println("Initializing Railway database...");
+        System.out.println("Initializing Railway database asynchronously...");
 
-        try {
-            // Check if database is already initialized
-            boolean isInitialized = checkIfDatabaseInitialized();
+        // Run database initialization asynchronously to not block application startup
+        CompletableFuture.runAsync(() -> {
+            try {
+                // Check if database is already initialized
+                boolean isInitialized = checkIfDatabaseInitialized();
 
-            if (!isInitialized) {
-                System.out.println("Database not initialized. Running initialization scripts...");
+                if (!isInitialized) {
+                    System.out.println("Database not initialized. Running initialization scripts...");
 
-                // Execute schema.sql first
-                executeSqlFile("schema.sql");
+                    // Execute schema.sql first
+                    executeSqlFile("schema.sql");
 
-                // Execute migration scripts in order
-                executeSqlFile("db/migration/V2__Rename_Current_Price_To_Price.sql");
-                executeSqlFile("db/migration/V3__Fix_Order_Total_Price_Trigger.sql");
-                executeSqlFile("db/migration/V4__Fix_Order_Total_Price_Trigger_Again.sql");
-                executeSqlFile("db/migration/V5__Create_ID_Generator_Table.sql");
-                executeSqlFile("db/migration/V5__Remove_Auto_Increment_From_Orders.sql");
-                executeSqlFile("db/migration/V6__Modify_Order_Details_Table.sql");
+                    // Execute migration scripts in order
+                    executeSqlFile("db/migration/V2__Rename_Current_Price_To_Price.sql");
+                    executeSqlFile("db/migration/V3__Fix_Order_Total_Price_Trigger.sql");
+                    executeSqlFile("db/migration/V4__Fix_Order_Total_Price_Trigger_Again.sql");
+                    executeSqlFile("db/migration/V5__Create_ID_Generator_Table.sql");
+                    executeSqlFile("db/migration/V5__Remove_Auto_Increment_From_Orders.sql");
+                    executeSqlFile("db/migration/V6__Modify_Order_Details_Table.sql");
 
-                // Execute data population scripts
-                executeSqlFile("db/scripts/fill_database.sql");
+                    // Execute data population scripts
+                    executeSqlFile("db/scripts/fill_database.sql");
 
-                System.out.println("Database initialization completed successfully!");
-            } else {
-                System.out.println("Database already initialized. Skipping initialization.");
+                    System.out.println("Database initialization completed successfully!");
+                } else {
+                    System.out.println("Database already initialized. Skipping initialization.");
+                }
+
+            } catch (Exception e) {
+                System.err.println("Error during database initialization: " + e.getMessage());
+                e.printStackTrace();
+                // Don't throw exception - let the application continue even if initialization fails
             }
+        });
 
-        } catch (Exception e) {
-            System.err.println("Error during database initialization: " + e.getMessage());
-            e.printStackTrace();
-            // Don't throw exception - let the application start even if initialization fails
-        }
+        System.out.println("Application startup continues while database initializes in background...");
     }
 
     private boolean checkIfDatabaseInitialized() {
