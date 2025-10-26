@@ -236,8 +236,8 @@ public class OrderApiController {
             verifyOrderOwnership(orderId);
             Order order = orderService.getOrderById(orderId);
             
-            // Implement cancellation logic
-            // This would typically involve updating the order status to CANCELLED
+            // Устанавливаем статус на CANCELLED
+            order.setStatus(OrderStatus.CANCELLED);
             
             Order updatedOrder = orderService.updateOrder(order);
             return ResponseEntity.ok(updatedOrder);
