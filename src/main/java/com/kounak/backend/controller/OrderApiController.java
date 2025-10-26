@@ -3,6 +3,7 @@ package com.kounak.backend.controller;
 import com.kounak.backend.exception.AuthException;
 import com.kounak.backend.model.Order;
 import com.kounak.backend.model.OrderDetails;
+import com.kounak.backend.model.OrderStatus;
 import com.kounak.backend.model.User;
 import com.kounak.backend.service.OrderService;
 import com.kounak.backend.service.UserService;
