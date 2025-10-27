@@ -2,7 +2,7 @@
 
 > Enterprise-grade Spring Boot API built **completely from scratch** as a university diploma project. No scaffolding tools, no code generators, no templates - just clean, professional backend architecture following industry standards.
 
-**[Live API → railway.app](https://kounakwebstore-backend-production.up.railway.app/api)**
+**[Live API → railway.app](https://fashion-store-backend-production-8473.up.railway.app/api)**
 
 **Try it**: `admin@kounak.com` / `admin123`
 
