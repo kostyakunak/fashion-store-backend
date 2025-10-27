@@ -1,144 +1,144 @@
 # Backend - Fashion Store API
 
-> Полнофункциональный REST API для интернет-магазина модной одежды
+> Full-featured REST API for fashion e-commerce platform
 
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.3-green.svg)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-17-orange.svg)](https://www.oracle.com/java/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue.svg)](https://www.mysql.com/)
 [![Railway](https://img.shields.io/badge/Railway-Deployed-5bc0de.svg)](https://railway.app/)
 
-## 🚀 Живой API
+## 🚀 Live API
 
 **Production URL**: https://kounakwebstore-backend-production.up.railway.app/api
 
-### Демо Аккаунт
+### Demo Account
 
-Админ: **admin@kounak.com** / **admin123**
+Admin: **admin@kounak.com** / **admin123**
 
-## 🎯 Основные Возможности
+## 🎯 Key Features
 
-### 🔐 Безопасность
-- Spring Security с JWT токенами
+### 🔐 Security
+- Spring Security with JWT tokens
 - Role-based access control (ADMIN, USER)
-- Bcrypt для хеширования паролей
-- Защита от CSRF атак
-- CORS конфигурация
+- BCrypt password hashing
+- CSRF attack protection
+- CORS configuration
 
-### 📊 База Данных
+### 📊 Database
 - MySQL 8.0
-- JPA/Hibernate для ORM
-- Оптимизированные SQL запросы
-- Автоматические миграции
+- JPA/Hibernate for ORM
+- Optimized SQL queries
+- Automatic migrations
 
 ### 🔄 REST API
-- RESTful архитектура
-- JSON для обмена данными
-- CRUD операции для всех сущностей
-- Пагинация и фильтрация
+- RESTful architecture
+- JSON data exchange
+- CRUD operations for all entities
+- Pagination and filtering
 
-### 📦 Сущности БД
+### 📦 Database Entities
 
-#### Users (Пользователи)
-- Личные данные
-- Роли и права доступа
-- Статус активности
+#### Users
+- Personal data
+- Roles and permissions
+- Active status
 
-#### Products (Товары)
-- Название и описание
-- Категории
-- Изображения
-- Цены (текущая и оригинальная)
+#### Products
+- Name and description
+- Categories
+- Images
+- Prices (current and original)
 
-#### Categories (Категории)
-- Иерархия категорий
-- Привязка товаров
+#### Categories
+- Category hierarchy
+- Product binding
 
-#### Orders (Заказы)
-- Статусы заказа (PENDING, CONFIRMED, SHIPPED, DELIVERED, CANCELLED)
-- Детали заказов
-- История изменений
+#### Orders
+- Order statuses (PENDING, CONFIRMED, SHIPPED, DELIVERED, CANCELLED)
+- Order details
+- Change history
 
-#### Cart (Корзина)
-- Добавление/удаление товаров
-- Управление количеством
-- Сохранение для пользователя
+#### Cart
+- Add/remove products
+- Quantity management
+- User persistence
 
-#### Wishlist (Список желаний)
-- Персональные желания
-- Быстрый доступ
+#### Wishlist
+- Personal wishlist
+- Quick access
 
-#### Addresses (Адреса)
-- Доставка
-- Основной адрес
-- Регистрация получателя
+#### Addresses
+- Delivery addresses
+- Main address
+- Recipient registration
 
-#### Warehouse (Склад)
-- Количество товаров
-- Размеры в наличии
-- Управление остатками
+#### Warehouse
+- Product quantity
+- Available sizes
+- Stock management
 
-## 🏗️ Архитектура
+## 🏗️ Architecture
 
 ```
 backend/
-├── config/              # Конфигурация (Security, CORS, DB)
-├── controller/          # REST контроллеры (22 контроллера)
-├── model/               # JPA сущности (11 моделей)
-├── repository/          # Data Access Layer (11 репозиториев)
-├── service/             # Бизнес логика (15 сервисов)
-├── dto/                 # Data Transfer Objects (7 DTO)
-├── security/            # JWT и Security (4 компонента)
-└── exception/           # Обработка ошибок (3 исключения)
+├── config/              # Configuration (Security, CORS, DB)
+├── controller/          # REST controllers (22 controllers)
+├── model/               # JPA entities (11 models)
+├── repository/          # Data Access Layer (11 repositories)
+├── service/             # Business logic (15 services)
+├── dto/                 # Data Transfer Objects (7 DTOs)
+├── security/            # JWT and Security (4 components)
+└── exception/           # Error handling (3 exceptions)
 ```
 
-### Контроллеры
-- `AuthController` - Аутентификация
-- `ProductController` - Товары
-- `CategoryController` - Категории
-- `CartApiController` - Корзина
-- `OrderApiController` - Заказы
-- `AddressController` - Адреса
+### Controllers
+- `AuthController` - Authentication
+- `ProductController` - Products
+- `CategoryController` - Categories
+- `CartApiController` - Cart
+- `OrderApiController` - Orders
+- `AddressController` - Addresses
 - `WishlistApiController` - Wishlist
-- `PaymentController` - Платежи
-- `AdminStatusController` - Админ статус
-- И еще 13 контроллеров...
+- `PaymentController` - Payments
+- `AdminStatusController` - Admin status
+- And 13 more controllers...
 
-### Сервисы
-- `AuthService` - Логика авторизации
-- `ProductService` - Управление товарами
-- `OrderService` - Обработка заказов
-- `CartService` - Корзина
-- `UserService` - Пользователи
-- `AdminService` - Админ функции
-- И еще 10 сервисов...
+### Services
+- `AuthService` - Authorization logic
+- `ProductService` - Product management
+- `OrderService` - Order processing
+- `CartService` - Cart management
+- `UserService` - User management
+- `AdminService` - Admin functions
+- And 10 more services...
 
-## 🚀 Запуск
+## 🚀 Setup
 
-### Локально
+### Local Setup
 
 ```bash
-# Клонирование
-git clone https://github.com/yourusername/kounak.git
-cd kounak/kounakwebstore-backend
+# Clone
+git clone https://github.com/yourusername/fashion-store-backend.git
+cd fashion-store-backend
 
-# Настройка базы данных (MySQL)
-# Создайте базу данных
+# Database setup (MySQL)
+# Create database
 mysql -u root -p
 CREATE DATABASE fashionDB;
 
-# Настройте application.properties
-# Укажите свои креденшелы для БД
+# Configure application.properties
+# Set your database credentials
 
-# Сборка и запуск
+# Build and run
 mvn clean install
 mvn spring-boot:run
 ```
 
-### Профиль Application
+### Application Profile
 
-В `application.properties`:
+In `application.properties`:
 ```properties
-# База данных
+# Database
 spring.datasource.url=jdbc:mysql://localhost:3306/fashionDB
 spring.datasource.username=root
 spring.datasource.password=your_password
@@ -150,11 +150,11 @@ jwt.secret=your-secret-key-here
 server.port=8080
 ```
 
-## 📚 API Документация
+## 📚 API Documentation
 
 ### Authentication
 
-#### Регистрация
+#### Register
 ```http
 POST /api/auth/register
 Content-Type: application/json
@@ -168,7 +168,7 @@ Content-Type: application/json
 }
 ```
 
-#### Вход
+#### Login
 ```http
 POST /api/auth/login
 Content-Type: application/json
@@ -195,27 +195,27 @@ Content-Type: application/json
 
 ### Products
 
-#### Получить все товары
+#### Get all products
 ```http
 GET /api/public/products
 Authorization: Bearer {token}
 ```
 
-#### Получить товар по ID
+#### Get product by ID
 ```http
 GET /api/public/products/{id}
 Authorization: Bearer {token}
 ```
 
-#### Создать товар (Admin)
+#### Create product (Admin)
 ```http
 POST /api/admin/products
 Authorization: Bearer {admin_token}
 Content-Type: application/json
 
 {
-  "name": "Название товара",
-  "description": "Описание",
+  "name": "Product name",
+  "description": "Description",
   "categoryId": 1,
   "images": ["url1", "url2"],
   "price": 99.99,
@@ -225,7 +225,7 @@ Content-Type: application/json
 
 ### Orders
 
-#### Создать заказ
+#### Create order
 ```http
 POST /api/orders/create
 Authorization: Bearer {token}
@@ -243,31 +243,31 @@ Content-Type: application/json
 }
 ```
 
-#### Получить заказы пользователя
+#### Get user orders
 ```http
 GET /api/orders
 Authorization: Bearer {token}
 ```
 
-#### Отменить заказ
+#### Cancel order
 ```http
 PUT /api/orders/{orderId}/cancel
 Authorization: Bearer {token}
 ```
 
-## 🧪 Тестирование
+## 🧪 Testing
 
 ```bash
-# Запуск всех тестов
+# Run all tests
 mvn test
 
-# Запуск с покрытием
+# Run with coverage
 mvn test jacoco:report
 ```
 
-## 📊 База Данных
+## 📊 Database
 
-### Диаграмма ER
+### ER Diagram
 
 ```
 users ────────┬──── orders
@@ -287,24 +287,24 @@ users ────────┬──── orders
                    └── products
 ```
 
-## 🔧 Конфигурация
+## 🔧 Configuration
 
 ### Security Configuration
-- JWT токены с expire 48 часов
-- Password encoding с BCrypt
-- CORS для фронтенда
-- Сессионные cookies с secure флагом
+- JWT tokens with 48-hour expiry
+- BCrypt password encoding
+- CORS for frontend
+- Session cookies with secure flag
 
 ### Database Configuration
 - Connection pool: HikariCP
-- Batch processing: 50 операций
-- Автоматические транзакции
-- Timeout: 30 секунд
+- Batch processing: 50 operations
+- Automatic transactions
+- Timeout: 30 seconds
 
-## 🚢 Деплой
+## 🚢 Deployment
 
 ### Railway
-Проект деплоится на Railway автоматически из GitHub:
+Project deploys to Railway automatically from GitHub:
 1. Repository: `kounak/kounakwebstore-backend`
 2. Build: `mvn clean install`
 3. Run: `java -jar target/demo-0.0.1-SNAPSHOT.jar`
@@ -318,10 +318,10 @@ JWT_SECRET=your-secret
 PORT=8080
 ```
 
-## 📝 Логирование
+## 📝 Logging
 
 ```properties
-# Debug logging для разработки
+# Debug logging for development
 logging.level.com.kounak.backend=DEBUG
 logging.level.org.springframework.web=DEBUG
 
@@ -329,32 +329,31 @@ logging.level.org.springframework.web=DEBUG
 logging.level.org.hibernate.SQL=DEBUG
 ```
 
-## 🎯 Статистика
+## 🎯 Statistics
 
-- **Контроллеры**: 22
-- **Модели**: 11
-- **Сервисы**: 15
-- **Репозитории**: 11
-- **DTO**: 7
+- **Controllers**: 22
+- **Models**: 11
+- **Services**: 15
+- **Repositories**: 11
+- **DTOs**: 7
 - **API Endpoints**: 50+
 
-## 🏆 Особенности
+## 🏆 Features
 
-✅ **Полная безопасность** - JWT, BCrypt, Spring Security  
-✅ **Масштабируемость** - Оптимизированные запросы  
-✅ **Документированный API** - RESTful принципы  
-✅ **Error handling** - Централизованная обработка ошибок  
-✅ **Production ready** - Готов к использованию  
+✅ **Full security** - JWT, BCrypt, Spring Security  
+✅ **Scalability** - Optimized queries  
+✅ **Documented API** - RESTful principles  
+✅ **Error handling** - Centralized error handling  
+✅ **Production ready** - Ready for use  
 
-## 📄 Лицензия
+## 📄 License
 
 MIT License
 
-## 👨‍💻 Автор
+## 👨‍💻 Author
 
-**Kostya Kunak** - Разработано с нуля для дипломной работы
+**Kostya Kunak** - Built from scratch for diploma project
 
 ---
 
-⭐ Спасибо за интерес к проекту!
-
+⭐ Thanks for your interest in the project!
