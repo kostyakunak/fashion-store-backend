@@ -11,6 +11,10 @@
 
 **Production URL**: https://kounakwebstore-backend-production.up.railway.app/api
 
+### Демо Аккаунт
+
+Админ: **admin@kounak.com** / **admin123**
+
 ## 🎯 Основные Возможности
 
 ### 🔐 Безопасность
