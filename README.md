@@ -7,9 +7,9 @@
 [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue.svg)](https://www.mysql.com/)
 [![Railway](https://img.shields.io/badge/Railway-Deployed-5bc0de.svg)](https://railway.app/)
 
-## 🚀 Live API
+## Live Demo
 
-**Production URL**: https://kounakwebstore-backend-production.up.railway.app/api
+**API URL**: https://kounakwebstore-backend-production.up.railway.app/api
 
 ### Demo Account
 
