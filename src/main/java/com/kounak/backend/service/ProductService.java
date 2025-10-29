@@ -6,6 +6,8 @@ import com.kounak.backend.model.Product;
 import com.kounak.backend.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -43,6 +45,10 @@ public class ProductService {
 
     public List<Product> getAllProducts() {
         return productRepository.findAll();
+    }
+    
+    public List<Product> getActiveProducts() {
+        return productRepository.findByArchivedFalse();
     }
 
     public Product getProductById(Long id) {
@@ -146,5 +152,19 @@ public class ProductService {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new RuntimeException("Category not found"));
         return productRepository.findByCategory(category);
+    }
+    
+    public List<Product> getActiveProductsByCategoryId(Long categoryId) {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+        return productRepository.findByCategoryAndArchivedFalse(category);
+    }
+
+    public Page<Product> getAllProductsPaged(Pageable pageable) {
+        return productRepository.findAll(pageable);
+    }
+    
+    public Page<Product> getActiveProductsPaged(Pageable pageable) {
+        return productRepository.findByArchivedFalse(pageable);
     }
 }
