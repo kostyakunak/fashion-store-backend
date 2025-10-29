@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 import java.util.HashMap;
 
 @RestController
-@CrossOrigin(origins = {"http://localhost:3000", "https://kounak2.netlify.app"}) // Разрешаем CORS для фронтенд приложения
+@CrossOrigin(origins = {"http://localhost:3000", "https://kounak.netlify.app", "https://kounak2.netlify.app"}) // Разрешаем CORS для фронтенд приложения
 @RequestMapping("/products")
 public class PublicProductController {
 
