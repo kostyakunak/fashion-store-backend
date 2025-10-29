@@ -48,6 +48,7 @@ The backend consists of:
 - **Address management** - Multiple delivery addresses per user
 - **Payment simulation** - Transaction processing
 - **Admin operations** - Product CRUD, category management, statistics
+- **Product archiving** - Archive/unarchive products; archived products are automatically excluded from public catalog endpoints
 
 ### API Architecture
 - **RESTful design** - Clean, intuitive endpoints
@@ -131,10 +132,14 @@ GET  /api/auth/user       # Get current user
 
 ### Products
 ```http
-GET  /api/public/products      # List all products
-GET  /api/public/products/{id} # Get product details
+GET  /products                 # List all active products (archived excluded)
+GET  /products/{id}            # Get product details
+GET  /products/category/{id}   # Get products by category (archived excluded)
+GET  /products/chunked         # Paginated products (archived excluded)
 GET  /api/public/categories    # List categories
 ```
+
+**Note**: All public product endpoints automatically filter out archived products. Only active products are visible to customers in the catalog.
 
 ### Shopping
 ```http
@@ -153,11 +158,13 @@ PUT  /api/orders/{id}/cancel   # Cancel order
 
 ### Admin (ADMIN role required)
 ```http
-GET    /api/admin/products      # Manage products
+GET    /api/admin/products      # Manage products (includes archived)
 POST   /api/admin/products      # Create product
 PUT    /api/admin/products/{id}# Update product
 DELETE /api/admin/products/{id}# Delete product
 ```
+
+**Product Archiving**: Products can be archived in the admin panel. Archived products are automatically excluded from all public catalog endpoints - customers will only see active (non-archived) products.
 
 ## 🔒 Security Features
 
@@ -202,7 +209,7 @@ The project showcases enterprise-level backend development that can power real-w
 
 ## 👨‍💻 Author
 
-**Kostya Kunak** - Full-stack developer and university student in Ukraine
+**Konstantin Kunak** - Full-stack developer and university student in Ukraine
 
 Built completely from scratch - every controller, every service, every security feature written from the ground up following professional standards.
 
