@@ -17,6 +17,9 @@ public class Product {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
+    @Column(name = "archived", nullable = false)
+    private Boolean archived = false;
+
     public Product() {}
 
     public Product(String name, String productDetails, String measurements, Category category) {
@@ -41,4 +44,7 @@ public class Product {
 
     public Category getCategory() { return category; }
     public void setCategory(Category category) { this.category = category; }
+
+    public Boolean getArchived() { return archived; }
+    public void setArchived(Boolean archived) { this.archived = archived; }
 }
